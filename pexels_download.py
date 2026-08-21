@@ -34,7 +34,21 @@ def main():
             print("No video files found in the result.", file=sys.stderr)
             sys.exit(1)
 
-        download_url = video_files[0].get('link')
+        # テスト用に軽量なSD画質または適切なmp4ファイルを選択
+        chosen_file = None
+        for vf in video_files:
+            if vf.get('quality') == 'sd' and vf.get('file_type') == 'video/mp4':
+                chosen_file = vf
+                break
+        if not chosen_file:
+            for vf in video_files:
+                if vf.get('file_type') == 'video/mp4':
+                    chosen_file = vf
+                    break
+        if not chosen_file:
+            chosen_file = video_files[0]
+
+        download_url = chosen_file.get('link')
         if not download_url:
             print("No download link available for the video.", file=sys.stderr)
             sys.exit(1)

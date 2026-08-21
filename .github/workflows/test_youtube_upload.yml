@@ -1,10 +1,13 @@
-﻿name: Test Pexels API Connection
+﻿name: Test YouTube API Upload
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  test-pexels:
+  test-upload:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Test Pexels API
+      - name: Download test video from Pexels
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python pexels_download.py
+
+      - name: Upload test video to YouTube
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: |
+          python youtube_upload.py
