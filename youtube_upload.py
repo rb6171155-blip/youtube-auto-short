@@ -11,6 +11,8 @@ CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 REFRESH_TOKEN = os.environ.get('YOUTUBE_REFRESH_TOKEN')
 PUBLISH_AT = os.environ.get('YOUTUBE_PUBLISH_AT')
 VIDEO_PATH = os.environ.get('VIDEO_PATH', os.path.join('test_output', 'shorts_test.mp4'))
+VIDEO_TITLE = os.environ.get('YOUTUBE_VIDEO_TITLE', 'Test Shorts Scheduled Upload #Shorts')
+VIDEO_DESCRIPTION = os.environ.get('YOUTUBE_VIDEO_DESCRIPTION', 'Test scheduled Shorts upload via GitHub Actions. #Shorts')
 
 def get_authenticated_service():
     if not CLIENT_ID or not CLIENT_SECRET or not REFRESH_TOKEN:
@@ -34,7 +36,7 @@ def get_authenticated_service():
         print(f"Error authenticating with YouTube API: {e}", file=sys.stderr)
         sys.exit(1)
 
-def upload_video(youtube, file_path, publish_at):
+def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=VIDEO_DESCRIPTION):
     if not os.path.exists(file_path):
         print(f"Error: Video file not found at {file_path}", file=sys.stderr)
         sys.exit(1)
@@ -46,11 +48,17 @@ def upload_video(youtube, file_path, publish_at):
     print(f"Target video file: {file_path}")
     print(f"Scheduled publish time (publishAt): {publish_at}")
 
+    # #Shortsタグが含まれていることを確認
+    if '#Shorts' not in title and '#shorts' not in title:
+        title = f"{title} #Shorts"
+    if '#Shorts' not in description and '#shorts' not in description:
+        description = f"{description}\n\n#Shorts"
+
     body = {
         'snippet': {
-            'title': 'Test Shorts Scheduled Upload #Shorts',
-            'description': 'Test scheduled Shorts upload via GitHub Actions. #Shorts',
-            'tags': ['test', 'Shorts']
+            'title': title,
+            'description': description,
+            'tags': ['Shorts', 'aquarium', 'relaxation']
         },
         'status': {
             'privacyStatus': 'private',
@@ -93,7 +101,7 @@ def upload_video(youtube, file_path, publish_at):
 
 def main():
     youtube = get_authenticated_service()
-    upload_video(youtube, VIDEO_PATH, PUBLISH_AT)
+    upload_video(youtube, VIDEO_PATH, PUBLISH_AT, VIDEO_TITLE, VIDEO_DESCRIPTION)
 
 if __name__ == '__main__':
     main()
