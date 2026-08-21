@@ -1,7 +1,8 @@
 ﻿import os
 import sys
 from voice_generator import generate_voice
-from shorts_editor import build_shorts_video, DEFAULT_THEME
+from shorts_editor import build_shorts_video
+from themes import DEFAULT_THEME, get_theme_by_id, get_all_themes
 
 INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join('test_output', 'shorts_test.mp4'))
 OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'tts_video_test.mp4'))
@@ -9,6 +10,7 @@ NARRATION_PATH = os.path.join('test_output', 'narration.mp3')
 
 def run_pipeline(theme=DEFAULT_THEME, input_video=INPUT_VIDEO, output_video=OUTPUT_VIDEO):
     print("=== YouTube Shorts Generation Pipeline ===")
+    print(f"Theme ID: {theme.get('theme_id')}")
     print(f"Theme Title: {theme.get('title')}")
     print(f"Narration Text: {theme.get('narration')}")
 

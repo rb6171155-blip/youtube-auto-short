@@ -7,6 +7,7 @@ import json
 import subprocess
 import urllib.request
 from PIL import Image, ImageDraw, ImageFont
+from themes import DEFAULT_THEME, get_theme_by_id, get_all_themes
 
 INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join('test_output', 'shorts_test.mp4'))
 OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'tts_video_test.mp4'))
@@ -28,27 +29,6 @@ FONT_CANDIDATES = [
     'C:/Windows/Fonts/meiryo.ttc',
     'C:/Windows/Fonts/msgothic.ttc'
 ]
-
-# 代表テーマ「テーマ1-1：痛みの先にある生活」
-DEFAULT_THEME = {
-    'theme_id': 'theme_1_1_philosophy',
-    'title': '痛みの先にある生活 #Shorts',
-    'narration': '痛みを和らげること。それはゴールではなく、スタートです。西田医院では、あなたが笑顔で暮らし続けられるよう、生活の背景まで一緒に考えます。',
-    'scenes': [
-        {
-            'start': 0.0,
-            'end': 11.5,
-            'tag': '西田医院が大切にしていること',
-            'lines': ['痛みを減らし、', 'その先の生活へ。']
-        },
-        {
-            'start': 11.5,
-            'end': 15.0,
-            'tag': '公式ホームページ・施設情報',
-            'lines': ['詳しくは', 'プロフィールから']
-        }
-    ]
-}
 
 def ensure_font_available():
     for candidate in FONT_CANDIDATES:
@@ -279,7 +259,6 @@ def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration
         last_v = next_v
 
     if has_narration:
-        # ナレーション主音声(volume=1.0) + 控えめBGM(volume=0.06)
         filter_chains.append("[1:a]volume=1.0,afade=t=out:st=13:d=2[anarr]")
         filter_chains.append("[2:a]volume=0.06,afade=t=out:st=13:d=2[abgm]")
         filter_chains.append("[anarr][abgm]amix=inputs=2:duration=longest:dropout_transition=2[aout]")
