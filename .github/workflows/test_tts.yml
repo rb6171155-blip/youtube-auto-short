@@ -1,0 +1,33 @@
+﻿name: Test TTS Audio Generation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-tts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate TTS audio samples
+        run: |
+          python tts_test.py
+
+      - name: Upload TTS audio samples as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tts-audio-samples
+          path: test_output/tts_samples/*.mp3
+          retention-days: 7
