@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 test_output/
 test_output_artifact/
+test_tts_video_artifact/
 *.mp4
 assets/fonts/*.otf
 assets/fonts/*.ttf
