@@ -9,6 +9,8 @@ from googleapiclient.errors import HttpError
 CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 REFRESH_TOKEN = os.environ.get('YOUTUBE_REFRESH_TOKEN')
+PUBLISH_AT = os.environ.get('YOUTUBE_PUBLISH_AT')
+VIDEO_PATH = os.environ.get('VIDEO_PATH', os.path.join('test_output', 'shorts_test.mp4'))
 
 def get_authenticated_service():
     if not CLIENT_ID or not CLIENT_SECRET or not REFRESH_TOKEN:
@@ -32,19 +34,28 @@ def get_authenticated_service():
         print(f"Error authenticating with YouTube API: {e}", file=sys.stderr)
         sys.exit(1)
 
-def upload_video(youtube, file_path):
+def upload_video(youtube, file_path, publish_at):
     if not os.path.exists(file_path):
         print(f"Error: Video file not found at {file_path}", file=sys.stderr)
         sys.exit(1)
 
+    if not publish_at:
+        print("Error: YOUTUBE_PUBLISH_AT environment variable is required (ISO 8601 UTC format).", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Target video file: {file_path}")
+    print(f"Scheduled publish time (publishAt): {publish_at}")
+
     body = {
         'snippet': {
-            'title': 'Test Upload Video',
-            'description': 'This is a test upload via YouTube Data API v3 in GitHub Actions.',
-            'tags': ['test', 'api']
+            'title': 'Test Shorts Scheduled Upload #Shorts',
+            'description': 'Test scheduled Shorts upload via GitHub Actions. #Shorts',
+            'tags': ['test', 'Shorts']
         },
         'status': {
-            'privacyStatus': 'private'
+            'privacyStatus': 'private',
+            'publishAt': publish_at,
+            'selfDeclaredMadeForKids': False
         }
     }
 
@@ -56,7 +67,7 @@ def upload_video(youtube, file_path):
             media_body=media
         )
 
-        print("Starting video upload to YouTube...")
+        print("Starting scheduled video upload to YouTube...")
         response = None
         while response is None:
             status, response = request.next_chunk()
@@ -64,8 +75,15 @@ def upload_video(youtube, file_path):
                 print(f"Uploaded {int(status.progress() * 100)}%")
 
         video_id = response.get('id')
+        status_info = response.get('status', {})
+        snippet_info = response.get('snippet', {})
+
         print(f"Upload successful. Video ID: {video_id}")
-        return video_id
+        print(f"Uploaded Video Title: {snippet_info.get('title')}")
+        print(f"Privacy Status: {status_info.get('privacyStatus')}")
+        print(f"Confirmed publishAt: {status_info.get('publishAt')}")
+
+        return response
     except HttpError as e:
         print(f"YouTube API HTTP Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -74,9 +92,8 @@ def upload_video(youtube, file_path):
         sys.exit(1)
 
 def main():
-    video_path = os.path.join('test_output', 'pexels_test.mp4')
     youtube = get_authenticated_service()
-    upload_video(youtube, video_path)
+    upload_video(youtube, VIDEO_PATH, PUBLISH_AT)
 
 if __name__ == '__main__':
     main()
