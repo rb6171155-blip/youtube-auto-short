@@ -3,3 +3,5 @@ client_secret_*.json
 __pycache__/
 *.pyc
 .venv/
+test_output/
+*.mp4
