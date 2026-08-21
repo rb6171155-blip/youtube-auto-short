@@ -1,0 +1,52 @@
+﻿name: Test TTS Narration Video Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-tts-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ffmpeg and Japanese fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download test video from Pexels
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python pexels_download.py
+
+      - name: Convert video to 9:16 Shorts format
+        run: |
+          python shorts_convert.py
+
+      - name: Run TTS Narration and Video Pipeline
+        run: |
+          python generate_shorts_pipeline.py
+
+      - name: Upload Completed Video and Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tts-video-completed
+          path: |
+            test_output/tts_video_test.mp4
+            test_output/narration.mp3
+            test_output/preview_scene_*.jpg
+            test_output/overlay_scene_*.png
+          retention-days: 7

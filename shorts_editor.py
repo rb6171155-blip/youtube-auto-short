@@ -9,7 +9,8 @@ import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
 INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join('test_output', 'shorts_test.mp4'))
-OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'shorts_final.mp4'))
+OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'tts_video_test.mp4'))
+NARRATION_AUDIO = os.environ.get('NARRATION_AUDIO', os.path.join('test_output', 'narration.mp3'))
 OUTPUT_DIR = 'test_output'
 ASSETS_DIR = 'assets'
 
@@ -28,40 +29,32 @@ FONT_CANDIDATES = [
     'C:/Windows/Fonts/msgothic.ttc'
 ]
 
-# 試作テーマ：「医療と介護を一体で支える理由」
-DEFAULT_SCENES = [
-    {
-        'start': 0.0,
-        'end': 3.8,
-        'tag': '西田医院が大切にしていること',
-        'lines': ['医療だけでも、', '介護だけでもない。']
-    },
-    {
-        'start': 3.8,
-        'end': 7.6,
-        'tag': '切れ目のないサポート',
-        'lines': ['痛みの治療から', '日々の生活まで支える。']
-    },
-    {
-        'start': 7.6,
-        'end': 11.4,
-        'tag': '地域に寄り添う7施設',
-        'lines': ['西田医院の', '医療・介護連携']
-    },
-    {
-        'start': 11.4,
-        'end': 15.0,
-        'tag': '公式ホームページ・施設情報',
-        'lines': ['詳しくは', 'プロフィールのリンクから']
-    }
-]
+# テーマ定義データ構造（ナレーションと字幕を完全分離・15秒に詰め込まない設計）
+DEFAULT_THEME = {
+    'theme_id': 'nishida_philosophy_01',
+    'title': '医療と介護を一体で支える理由 #Shorts',
+    'narration': '西田医院が大切にしているのは、治療だけではありません。その先の生活まで、一緒に支えることです。',
+    'scenes': [
+        {
+            'start': 0.0,
+            'end': 11.0,
+            'tag': '西田医院が大切にしていること',
+            'lines': ['治療だけではない。', 'その先の生活まで。']
+        },
+        {
+            'start': 11.0,
+            'end': 15.0,
+            'tag': '公式ホームページ・施設情報',
+            'lines': ['詳しくは', 'プロフィールから']
+        }
+    ]
+}
 
 def ensure_font_available():
     for candidate in FONT_CANDIDATES:
         if os.path.exists(candidate):
             return candidate
     
-    # 見つからない場合は自動ダウンロード
     try:
         os.makedirs(os.path.dirname(FONT_PATH_LOCAL), exist_ok=True)
         print("Downloading NotoSansCJK font for Japanese rendering...")
@@ -91,7 +84,7 @@ def get_font(size):
 
 def create_scene_overlay(scene, index, output_dir):
     """
-    1080x1920の透過キャンバス上に、半透明の角丸ボックスと字幕を描画
+    1080x1920の透過キャンバス上に、半透明の角丸ボックスと字幕を描画（セーフエリア対応版）
     """
     width, height = 1080, 1920
     img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
@@ -101,10 +94,10 @@ def create_scene_overlay(scene, index, output_dir):
     tag_font = get_font(28)
     main_font = get_font(54)
 
-    # ボックス設定（画面中央〜下部付近）
-    box_w = 860
-    box_h = 360
-    box_x = (width - box_w) // 2
+    # ボックス設定（画面中央〜下部付近・YouTube Shortsの右側UIと干渉しない幅800px）
+    box_w = 800
+    box_h = 340
+    box_x = (width - box_w) // 2 # 左右マージン 140px（セーフエリア確保）
     box_y = 1180
     corner_radius = 28
 
@@ -131,7 +124,7 @@ def create_scene_overlay(scene, index, output_dir):
         tag_badge_w = tag_w + 36
         tag_badge_h = tag_h + 16
         tag_badge_x = (width - tag_badge_w) // 2
-        tag_badge_y = box_y + 36
+        tag_badge_y = box_y + 32
 
         draw.rounded_rectangle(
             [tag_badge_x, tag_badge_y, tag_badge_x + tag_badge_w, tag_badge_y + tag_badge_h],
@@ -155,7 +148,7 @@ def create_scene_overlay(scene, index, output_dir):
             line_heights.append(bbox[3] - bbox[1])
 
         total_text_h = sum(line_heights) + line_spacing * (len(lines) - 1)
-        text_start_y = box_y + 120 + (box_h - 120 - total_text_h) // 2
+        text_start_y = box_y + 110 + (box_h - 110 - total_text_h) // 2
 
         current_y = text_start_y
         for i, line in enumerate(lines):
@@ -199,7 +192,6 @@ def create_scene_overlay(scene, index, output_dir):
 def generate_gentle_bgm(output_path, duration=15.0, sample_rate=44100):
     """
     著作権完全フリー・安全な穏やかアコースティック/ピアノ調ヒーリングBGMを生成
-    (C - G - Am - F の優しい分散和音)
     """
     if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
         return output_path
@@ -251,13 +243,15 @@ def generate_gentle_bgm(output_path, duration=15.0, sample_rate=44100):
     print(f"Generated gentle background audio: {output_path}")
     return output_path
 
-def build_shorts_video(input_video, output_video, scenes=DEFAULT_SCENES):
+def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration_path=NARRATION_AUDIO):
     if not os.path.exists(input_video):
         print(f"Error: Input video not found at {input_video}", file=sys.stderr)
         sys.exit(1)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(os.path.dirname(output_video), exist_ok=True)
+
+    scenes = theme.get('scenes', [])
 
     # 1. 各シーンの字幕透過オーバーレイ画像生成
     overlay_files = []
@@ -266,26 +260,48 @@ def build_shorts_video(input_video, output_video, scenes=DEFAULT_SCENES):
         overlay_files.append(f)
         print(f"Created scene {idx + 1} overlay image: {f}")
 
-    # 2. BGM音源準備（穏やかなヒーリングBGM）
+    # 2. BGM音源準備
     bgm_path = os.path.join(ASSETS_DIR, 'bgm', 'gentle_bgm.wav')
     generate_gentle_bgm(bgm_path, duration=15.0)
 
-    # 3. ffmpeg コマンド構築
-    ffmpeg_inputs = ['ffmpeg', '-y', '-i', input_video, '-i', bgm_path]
+    # 3. ナレーション音声の有無に応じたフォールバック分岐
+    has_narration = os.path.exists(narration_path) and os.path.getsize(narration_path) > 1000
+
+    if has_narration:
+        print(f"[AUDIO MODE] Narration mode active: {narration_path}")
+        # 入力: 0=動画, 1=ナレーション, 2=BGM, 3..=オーバーレイ
+        ffmpeg_inputs = ['ffmpeg', '-y', '-i', input_video, '-i', narration_path, '-i', bgm_path]
+        overlay_start_idx = 3
+    else:
+        print("[AUDIO MODE] [FALLBACK] Narration audio not available. Falling back to subtitle + BGM mode.")
+        # 入力: 0=動画, 1=BGM, 2..=オーバーレイ
+        ffmpeg_inputs = ['ffmpeg', '-y', '-i', input_video, '-i', bgm_path]
+        overlay_start_idx = 2
+
     for ov in overlay_files:
         ffmpeg_inputs.extend(['-i', ov])
 
+    # フィルタグラフ構築
     filter_chains = []
     last_v = "[0:v]"
     for idx, scene in enumerate(scenes):
-        in_idx = 2 + idx
+        in_idx = overlay_start_idx + idx
         next_v = f"[v{idx}]" if idx < len(scenes) - 1 else "[vout]"
         st = scene['start']
         et = scene['end']
         filter_chains.append(f"{last_v}[{in_idx}:v]overlay=enable='between(t,{st},{et})':format=auto{next_v}")
         last_v = next_v
 
-    filter_chains.append("[1:a]volume=0.15,afade=t=out:st=13:d=2[aout]")
+    # 音声フィルタグラフ
+    if has_narration:
+        # ナレーション（主音量1.0） + BGM（小音量0.06、邪魔しないアンビエント）
+        filter_chains.append("[1:a]volume=1.0,afade=t=out:st=13:d=2[anarr]")
+        filter_chains.append("[2:a]volume=0.06,afade=t=out:st=13:d=2[abgm]")
+        filter_chains.append("[anarr][abgm]amix=inputs=2:duration=longest:dropout_transition=2[aout]")
+    else:
+        # フォールバック時: BGM通常音量(0.15)
+        filter_chains.append("[1:a]volume=0.15,afade=t=out:st=13:d=2[aout]")
+
     filter_complex_str = "; ".join(filter_chains)
 
     cmd = ffmpeg_inputs + [
@@ -329,7 +345,7 @@ def build_shorts_video(input_video, output_video, scenes=DEFAULT_SCENES):
             print(f"Extracted preview frame {idx + 1}: {snap_path}")
 
 def main():
-    build_shorts_video(INPUT_VIDEO, OUTPUT_VIDEO)
+    build_shorts_video(INPUT_VIDEO, OUTPUT_VIDEO, DEFAULT_THEME, NARRATION_AUDIO)
 
 if __name__ == '__main__':
     main()
