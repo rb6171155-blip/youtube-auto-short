@@ -2,6 +2,8 @@
 西田医院グループ 確定済み21テーマ シナリオ定義データ (M2)
 NanamiNeural (話速: -5%) 向けに最適化されたナレーション原稿と字幕原稿を完全分離で管理。
 """
+import os
+import json
 
 THEMES = [
     # ----------------------------------------------------
@@ -463,3 +465,55 @@ def get_theme_by_id(theme_id: str):
 
 def get_all_themes():
     return THEMES
+
+def get_next_theme(state_file="state/theme_state.json"):
+    """
+    確定済み21テーマの自動ローテーション選択関数。
+    - 環境変数 THEME_ID が指定されている場合は最優先でそのテーマを返す。
+    - 状態ファイルが存在しない場合: THEMES[0] (theme_1_1) を選択。
+    - 状態ファイルに前回のテーマ情報がある場合: 次のテーマを選択。
+    - theme_7_3 (21番目) の次は theme_1_1 (1番目) へ戻る。
+    - 状態ファイルの読み込み・書き込みに失敗しても、プログラム全体を停止させず DEFAULT_THEME へフォールバック。
+    """
+    # 1. 環境変数 THEME_ID の優先処理
+    env_theme_id = os.environ.get("THEME_ID", "").strip()
+    if env_theme_id:
+        theme = get_theme_by_id(env_theme_id)
+        if theme:
+            print(f"[THEME] Using theme specified by THEME_ID environment variable: {env_theme_id}")
+            return theme
+        else:
+            print(f"[THEME WARNING] Specified THEME_ID '{env_theme_id}' not found. Falling back to DEFAULT_THEME.")
+            return DEFAULT_THEME
+
+    # 2. 状態ファイルからの前回情報読み込み
+    next_index = 0
+    try:
+        if os.path.exists(state_file):
+            with open(state_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            last_theme_id = data.get("last_theme_id", "")
+            for idx, t in enumerate(THEMES):
+                if t["theme_id"] == last_theme_id:
+                    next_index = (idx + 1) % len(THEMES)
+                    break
+    except Exception as e:
+        print(f"[THEME WARNING] Failed to read state file '{state_file}': {e}. Using DEFAULT_THEME.")
+        return DEFAULT_THEME
+
+    selected_theme = THEMES[next_index]
+
+    # 3. 選択されたテーマ状態の保存
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(state_file)), exist_ok=True)
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump({
+                "last_theme_id": selected_theme["theme_id"],
+                "last_index": next_index,
+                "category": selected_theme.get("category", ""),
+                "title": selected_theme.get("title", "")
+            }, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[THEME WARNING] Failed to write state file '{state_file}': {e}.")
+
+    return selected_theme
