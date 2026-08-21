@@ -9,7 +9,7 @@
 1. Pexels API動画取得（pexels_download.py）：GitHub Actions上でPexels APIから素材を取得・ダウンロード可能。
 2. ffmpegによる9:16 Shorts縦型変換（shorts_convert.py）：中央クロップおよび1080x1920（アスペクト比 0.5625）への変換・検証が完了。
 3. YouTube OAuth 2.0認証（YouTube Data API v3）：GitHub Secrets経由でのアクセストークン自動リフレッシュが完了。
-4. YouTube予約投稿・Shortsメタデータ設定（youtube_upload.py）：環境変数による本番タイトル・説明文・#Shortsタグ・非公開設定（privacyStatus: private）・指定未来日時の予約公開（publishAt）の設定に対応。
+4. YouTube予約投稿・Shortsメタデータ設定（youtube_upload.py）：動的なタイトル・説明文・#Shortsタグ・非公開設定（privacyStatus: private）・指定未来日時の予約公開（publishAt）の設定に対応。
 5. 確定済み21テーマ シナリオ定義データ（themes.py）：
    - 7カテゴリー（理念、外来リハ、通所リハ、通所介護、ISR、レッドコード、小規模多機能）各3テーマ＝計21テーマを完全登録。
    - ナレーション原稿（聴覚用：完全文）と字幕原稿（視覚用：短文キーワード）を完全分離。
@@ -23,6 +23,9 @@
    - concurrency による同時実行防止。
    - 投稿成功時（if: success()）のみ state/theme_state.json を Git Commit & Push して自動ローテーションを確定。
 
-## テスト状況
-- ローカル単体テスト：全項目合格
-- テスト投稿準備：完了（ユーザーの実行承認待ち）
+## 最新テスト投稿結果（実証完了）
+- 実行ワークフロー：Daily Auto Post Shorts to YouTube (Run ID: 32457980210 / 実行時間: 2分39秒 / Success)
+- YouTube 動画ID：oftr0xIOi-A
+- 予約公開日時：2026-08-22T07:20:07Z
+- タイトル：痛みの先にある生活 #Shorts
+- テーマ状態：state/theme_state.json への保存およびリモートプッシュ完了（次回は theme_1_2 へ進行）。
