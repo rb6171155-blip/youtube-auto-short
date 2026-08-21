@@ -1,0 +1,51 @@
+﻿name: Test Shorts Editor Subtitle and BGM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-shorts-editor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ffmpeg and Japanese fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download test video from Pexels
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python pexels_download.py
+
+      - name: Convert video to 9:16 Shorts format
+        run: |
+          python shorts_convert.py
+
+      - name: Composite subtitles and BGM with shorts_editor
+        run: |
+          python shorts_editor.py
+
+      - name: Upload generated video and previews as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shorts-prototype-output
+          path: |
+            test_output/shorts_final.mp4
+            test_output/preview_scene_*.jpg
+            test_output/overlay_scene_*.png
+          retention-days: 7

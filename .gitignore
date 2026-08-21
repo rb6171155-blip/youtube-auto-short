@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 test_output/
 *.mp4
+assets/fonts/*.otf
+assets/fonts/*.ttf
+assets/bgm/*.wav
