@@ -1,5 +1,5 @@
 ﻿"""
-西田医院グループ 確定済み21テーマ シナリオ定義データ (M2)
+西田医院グループ 確定済み21テーマ シナリオ定義データ (M2/M3/M5)
 NanamiNeural (話速: -5%) 向けに最適化されたナレーション原稿と字幕原稿を完全分離で管理。
 """
 import os
@@ -466,21 +466,20 @@ def get_theme_by_id(theme_id: str):
 def get_all_themes():
     return THEMES
 
-def get_next_theme(state_file="state/theme_state.json"):
+def select_next_theme(state_file="state/theme_state.json"):
     """
-    確定済み21テーマの自動ローテーション選択関数。
+    次のテーマを選択して返す（状態ファイルへの書き込みは行わない読み込み専用関数）。
     - 環境変数 THEME_ID が指定されている場合は最優先でそのテーマを返す。
     - 状態ファイルが存在しない場合: THEMES[0] (theme_1_1) を選択。
     - 状態ファイルに前回のテーマ情報がある場合: 次のテーマを選択。
     - theme_7_3 (21番目) の次は theme_1_1 (1番目) へ戻る。
-    - 状態ファイルの読み込み・書き込みに失敗しても、プログラム全体を停止させず DEFAULT_THEME へフォールバック。
+    - 読み込みエラー時は安全に DEFAULT_THEME を返す。
     """
     # 1. 環境変数 THEME_ID の優先処理
     env_theme_id = os.environ.get("THEME_ID", "").strip()
     if env_theme_id:
         theme = get_theme_by_id(env_theme_id)
         if theme:
-            print(f"[THEME] Using theme specified by THEME_ID environment variable: {env_theme_id}")
             return theme
         else:
             print(f"[THEME WARNING] Specified THEME_ID '{env_theme_id}' not found. Falling back to DEFAULT_THEME.")
@@ -501,19 +500,48 @@ def get_next_theme(state_file="state/theme_state.json"):
         print(f"[THEME WARNING] Failed to read state file '{state_file}': {e}. Using DEFAULT_THEME.")
         return DEFAULT_THEME
 
-    selected_theme = THEMES[next_index]
+    return THEMES[next_index]
 
-    # 3. 選択されたテーマ状態の保存
+def commit_theme_state(theme_or_id, state_file="state/theme_state.json"):
+    """
+    YouTube投稿成功後に明示的に呼び出され、テーマ状態を確定保存する関数。
+    """
+    if isinstance(theme_or_id, dict):
+        theme_id = theme_or_id.get("theme_id", "")
+    else:
+        theme_id = str(theme_or_id)
+
+    theme = get_theme_by_id(theme_id)
+    if not theme:
+        theme = DEFAULT_THEME
+        theme_id = theme["theme_id"]
+
+    try:
+        theme_index = THEMES.index(theme)
+    except ValueError:
+        theme_index = 0
+
     try:
         os.makedirs(os.path.dirname(os.path.abspath(state_file)), exist_ok=True)
         with open(state_file, "w", encoding="utf-8") as f:
             json.dump({
-                "last_theme_id": selected_theme["theme_id"],
-                "last_index": next_index,
-                "category": selected_theme.get("category", ""),
-                "title": selected_theme.get("title", "")
+                "last_theme_id": theme_id,
+                "last_index": theme_index,
+                "category": theme.get("category", ""),
+                "title": theme.get("title", "")
             }, f, ensure_ascii=False, indent=2)
+        print(f"[THEME STATE] Successfully committed theme state: {theme_id} ({theme.get('title', '')})")
+        return True
     except Exception as e:
-        print(f"[THEME WARNING] Failed to write state file '{state_file}': {e}.")
+        print(f"[THEME WARNING] Failed to commit state file '{state_file}': {e}.")
+        return False
 
+def get_next_theme(state_file="state/theme_state.json", auto_commit=True):
+    """
+    確定済み21テーマの自動ローテーション選択関数（後方互換性用）。
+    auto_commit=True の場合は即座に状態を保存、False の場合は選択のみ。
+    """
+    selected_theme = select_next_theme(state_file=state_file)
+    if auto_commit:
+        commit_theme_state(selected_theme, state_file=state_file)
     return selected_theme

@@ -2,9 +2,22 @@
 
 on:
   schedule:
-    # 毎日 日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00 に自動実行
+    # 毎日日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00 に実行
     - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      theme_id:
+        description: 'Specify theme_id manually (optional, e.g. theme_3_2)'
+        required: false
+        default: ''
+
+# 同時実行防止（二重実行によるテーマ重複・重複投稿を遮断）
+concurrency:
+  group: production-auto-post
+  cancel-in-progress: false
+
+permissions:
+  contents: write
 
 jobs:
   auto-post-shorts:
@@ -13,11 +26,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install ffmpeg
+      - name: Install ffmpeg and Japanese fonts
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,15 +54,43 @@ jobs:
         run: |
           python shorts_convert.py
 
+      - name: Generate Shorts with narration, subtitle and BGM
+        env:
+          THEME_ID: ${{ github.event.inputs.theme_id || env.THEME_ID }}
+          INPUT_VIDEO: test_output/shorts_test.mp4
+          OUTPUT_VIDEO: test_output/shorts_final.mp4
+        run: |
+          python generate_shorts_pipeline.py
+
       - name: Upload scheduled Shorts to YouTube
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          YOUTUBE_VIDEO_TITLE: "Daily Relaxation Aquarium Moments #Shorts"
-          YOUTUBE_VIDEO_DESCRIPTION: "Daily relaxing aquarium and ocean moments. Subscribe for more daily relaxation! #Shorts"
+          VIDEO_PATH: test_output/shorts_final.mp4
         run: |
-          # 実行日時の24時間後（安全な未来日時）をUTCのISO 8601形式で設定
           export YOUTUBE_PUBLISH_AT=$(date -u -d "+1 day" +"%Y-%m-%dT%H:%M:%SZ")
           echo "Calculated scheduled publishAt: $YOUTUBE_PUBLISH_AT"
+          if [ -f test_output/current_theme.json ]; then
+            export YOUTUBE_VIDEO_TITLE=$(python -c "import json; print(json.load(open('test_output/current_theme.json'))['title'])")
+            export YOUTUBE_VIDEO_DESCRIPTION=$(python -c "import json; t=json.load(open('test_output/current_theme.json')); print(f\"{t['title']}\n\n{t['narration']}\n\n#西田医院 #リハビリ #介護 #医療 #Shorts\")")
+          else
+            export YOUTUBE_VIDEO_TITLE="医療法人 西田医院 #Shorts"
+            export YOUTUBE_VIDEO_DESCRIPTION="医療法人 西田医院公式 YouTube Shorts\n\n#西田医院 #リハビリ #介護 #医療 #Shorts"
+          fi
           python youtube_upload.py
+
+      - name: Commit and push updated theme state
+        if: success()
+        run: |
+          # 投稿成功時のみテーマ状態を確定保存
+          python -c "import json, os; from themes import commit_theme_state, select_next_theme; theme = json.load(open('test_output/current_theme.json')) if os.path.exists('test_output/current_theme.json') else select_next_theme(); commit_theme_state(theme)"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/theme_state.json
+          if git diff --staged --quiet; then
+            echo "No theme state changes to commit."
+          else
+            git commit -m "Update theme state after successful post [skip ci]"
+            git push origin main
+          fi
