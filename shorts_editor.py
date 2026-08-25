@@ -3,127 +3,60 @@ import sys
 import math
 import struct
 import wave
-import json
 import subprocess
-import urllib.request
 from PIL import Image, ImageDraw, ImageFont
-from themes import DEFAULT_THEME, get_theme_by_id, get_all_themes
 
-INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join('test_output', 'shorts_test.mp4'))
-OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'tts_video_test.mp4'))
-NARRATION_AUDIO = os.environ.get('NARRATION_AUDIO', os.path.join('test_output', 'narration.mp3'))
-OUTPUT_DIR = 'test_output'
-ASSETS_DIR = 'assets'
-
-FONT_PATH_LOCAL = os.path.join(ASSETS_DIR, 'fonts', 'NotoSansJP-Bold.otf')
-
-FONT_CANDIDATES = [
-    FONT_PATH_LOCAL,
-    os.path.join(ASSETS_DIR, 'fonts', 'NotoSansJP-Bold.ttf'),
-    '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',
-    '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc',
-    '/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc',
-    '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-    '/usr/share/fonts/truetype/fonts-japanese-gothic.ttf',
-    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-    'C:/Windows/Fonts/meiryo.ttc',
-    'C:/Windows/Fonts/msgothic.ttc'
-]
-
-def ensure_font_available():
-    for candidate in FONT_CANDIDATES:
-        if os.path.exists(candidate):
-            return candidate
-    
-    try:
-        os.makedirs(os.path.dirname(FONT_PATH_LOCAL), exist_ok=True)
-        print("Downloading NotoSansCJK font for Japanese rendering...")
-        url = "https://raw.githubusercontent.com/googlefonts/noto-cjk/main/Sans/OTF/Japanese/NotoSansCJKjp-Bold.otf"
-        urllib.request.urlretrieve(url, FONT_PATH_LOCAL)
-        if os.path.exists(FONT_PATH_LOCAL):
-            return FONT_PATH_LOCAL
-    except Exception as e:
-        print(f"Font download warning: {e}", file=sys.stderr)
-    return None
+OUTPUT_DIR = "test_output"
+ASSETS_DIR = "assets"
 
 def get_font(size):
-    font_file = ensure_font_available()
-    if font_file:
-        try:
-            return ImageFont.truetype(font_file, size)
-        except Exception as e:
-            print(f"Error loading font {font_file}: {e}", file=sys.stderr)
-    
-    for candidate in FONT_CANDIDATES:
-        if os.path.exists(candidate):
+    candidates = [
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+        "C:\\Windows\\Fonts\\meiryo.ttc",
+        "C:\\Windows\\Fonts\\msgothic.ttc",
+        "C:\\Windows\\Fonts\\yu-gothic-bold.ttf",
+        "C:\\Windows\\Fonts\\yugothb.ttc",
+        "C:\\Windows\\Fonts\\arial.ttf"
+    ]
+    for font_path in candidates:
+        if os.path.exists(font_path):
             try:
-                return ImageFont.truetype(candidate, size)
+                return ImageFont.truetype(font_path, size)
             except Exception:
                 continue
     return ImageFont.load_default()
 
 def create_scene_overlay(scene, index, output_dir):
     """
-    1080x1920の透過キャンバス上に、半透明の角丸ボックスと字幕を描画（セーフエリア幅800px対応）
+    1080x1920の透過キャンバス上に、ナレーション同期字幕を描画（セーフエリア幅840px対応）
+    ※字幕位置を画面上部（YouTube Shortsの下部・右側UIを避けた上方セーフエリア）へ配置、枠なし
     """
     width, height = 1080, 1920
     img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    tag_font = get_font(28)
-    main_font = get_font(54)
+    main_font = get_font(52)
 
-    # ボックス設定（画面中央〜下部付近・YouTube Shortsの右側UIと干渉しない幅800px）
-    box_w = 800
-    box_h = 340
-    box_x = (width - box_w) // 2 # 左右マージン 140px（セーフエリア確保）
-    box_y = 1180
-    corner_radius = 28
+    # 字幕配置エリア設定（画面上方セーフエリア：ブランドヘッダー下付近）
+    box_w = 840
+    box_h = 280
+    box_x = (width - box_w) // 2 # 左右マージン 120px
+    box_y = 280                  # 画面上方
 
-    box_bg_color = (15, 28, 48, 200)       # rgba(15, 28, 48, 0.78)
-    box_border_color = (255, 255, 255, 45) # 薄い境界線
-
-    draw.rounded_rectangle(
-        [box_x, box_y, box_x + box_w, box_y + box_h],
-        radius=corner_radius,
-        fill=box_bg_color,
-        outline=box_border_color,
-        width=2
-    )
-
-    tag_text = scene.get('tag', '')
-    if tag_text and tag_font:
-        bbox = draw.textbbox((0, 0), tag_text, font=tag_font)
-        tag_w = bbox[2] - bbox[0]
-        tag_h = bbox[3] - bbox[1]
-
-        tag_badge_w = tag_w + 36
-        tag_badge_h = tag_h + 16
-        tag_badge_x = (width - tag_badge_w) // 2
-        tag_badge_y = box_y + 32
-
-        draw.rounded_rectangle(
-            [tag_badge_x, tag_badge_y, tag_badge_x + tag_badge_w, tag_badge_y + tag_badge_h],
-            radius=12,
-            fill=(41, 98, 180, 220)
-        )
-        draw.text(
-            (tag_badge_x + 18, tag_badge_y + 6),
-            tag_text,
-            font=tag_font,
-            fill=(255, 255, 255, 255)
-        )
-
+    # メイン字幕テキスト描画（画面上部・ドロップシャドウ付き白文字）
     lines = scene.get('lines', [])
     if lines and main_font:
-        line_spacing = 20
+        line_spacing = 22
         line_heights = []
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=main_font)
             line_heights.append(bbox[3] - bbox[1])
 
         total_text_h = sum(line_heights) + line_spacing * (len(lines) - 1)
-        text_start_y = box_y + 110 + (box_h - 110 - total_text_h) // 2
+        text_start_y = box_y + (box_h - total_text_h) // 2
 
         current_y = text_start_y
         for i, line in enumerate(lines):
@@ -131,15 +64,16 @@ def create_scene_overlay(scene, index, output_dir):
             line_w = bbox[2] - bbox[0]
             line_x = (width - line_w) // 2
 
-            # ドロップシャドウ
-            draw.text((line_x + 2, current_y + 2), line, font=main_font, fill=(0, 0, 0, 140))
+            # ドロップシャドウ（可読性向上のため周囲に影を付与）
+            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2), (-2, -2), (2, 2), (-2, 2), (2, -2), (0, 3), (3, 3)]:
+                draw.text((line_x + dx, current_y + dy), line, font=main_font, fill=(0, 0, 0, 200))
             # 白文字メインテキスト
             draw.text((line_x, current_y), line, font=main_font, fill=(255, 255, 255, 255))
 
             current_y += line_heights[i] + line_spacing
 
-    # 画面上部 固定ヘッダー
-    header_font = get_font(32)
+    # 画面上部 固定ヘッダー（「医療法人 西田医院」公式ブランド表示）
+    header_font = get_font(30)
     if header_font:
         header_text = "医療法人 西田医院"
         h_bbox = draw.textbbox((0, 0), header_text, font=header_font)
@@ -153,9 +87,9 @@ def create_scene_overlay(scene, index, output_dir):
 
         draw.rounded_rectangle(
             [h_badge_x, h_badge_y, h_badge_x + h_badge_w, h_badge_y + h_badge_h],
-            radius=16,
-            fill=(15, 28, 48, 180),
-            outline=(255, 255, 255, 40),
+            radius=14,
+            fill=(12, 24, 42, 190),
+            outline=(255, 255, 255, 45),
             width=1
         )
         draw.text((h_badge_x + 22, h_badge_y + 8), header_text, font=header_font, fill=(245, 248, 255, 255))
@@ -215,13 +149,17 @@ def generate_gentle_bgm(output_path, duration=15.0, sample_rate=44100):
     print(f"Generated gentle background audio: {output_path}")
     return output_path
 
-def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration_path=NARRATION_AUDIO):
+def build_shorts_video(input_video, output_video, theme=None, narration_path=None):
     if not os.path.exists(input_video):
         print(f"Error: Input video not found at {input_video}", file=sys.stderr)
         sys.exit(1)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(os.path.dirname(output_video), exist_ok=True)
+
+    if theme is None:
+        from themes import DEFAULT_THEME
+        theme = DEFAULT_THEME
 
     scenes = theme.get('scenes', [])
 
@@ -234,7 +172,7 @@ def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration
     bgm_path = os.path.join(ASSETS_DIR, 'bgm', 'gentle_bgm.wav')
     generate_gentle_bgm(bgm_path, duration=15.0)
 
-    has_narration = os.path.exists(narration_path) and os.path.getsize(narration_path) > 1000
+    has_narration = narration_path and os.path.exists(narration_path) and os.path.getsize(narration_path) > 1000
 
     if has_narration:
         print(f"[AUDIO MODE] Narration mode active: {narration_path}")
@@ -259,11 +197,11 @@ def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration
         last_v = next_v
 
     if has_narration:
-        filter_chains.append("[1:a]volume=1.0,afade=t=out:st=13:d=2[anarr]")
-        filter_chains.append("[2:a]volume=0.06,afade=t=out:st=13:d=2[abgm]")
+        filter_chains.append("[1:a]volume=1.0,afade=t=out:st=13.5:d=1.5[anarr]")
+        filter_chains.append("[2:a]volume=0.06,afade=t=out:st=13.5:d=1.5[abgm]")
         filter_chains.append("[anarr][abgm]amix=inputs=2:duration=longest:dropout_transition=2[aout]")
     else:
-        filter_chains.append("[1:a]volume=0.15,afade=t=out:st=13:d=2[aout]")
+        filter_chains.append("[1:a]volume=0.15,afade=t=out:st=13.5:d=1.5[aout]")
 
     filter_complex_str = "; ".join(filter_chains)
 
@@ -307,7 +245,7 @@ def build_shorts_video(input_video, output_video, theme=DEFAULT_THEME, narration
             print(f"Extracted preview frame {idx + 1}: {snap_path}")
 
 def main():
-    build_shorts_video(INPUT_VIDEO, OUTPUT_VIDEO, DEFAULT_THEME, NARRATION_AUDIO)
+    pass
 
 if __name__ == '__main__':
     main()

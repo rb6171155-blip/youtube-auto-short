@@ -1,9 +1,11 @@
-﻿name: Daily Auto Post Shorts to YouTube
+﻿name: Daily Auto Post Shorts to YouTube (Unlisted Evaluation Mode)
 
 on:
   schedule:
-    # 毎日日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00 に実行
+    # 第1回: 毎日 日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00
     - cron: '0 0 * * *'
+    # 第2回: 毎日 日本時間(JST) 午後12:30 = 協定世界時(UTC) 午前03:30
+    - cron: '30 3 * * *'
   workflow_dispatch:
     inputs:
       theme_id:
@@ -62,15 +64,15 @@ jobs:
         run: |
           python generate_shorts_pipeline.py
 
-      - name: Upload scheduled Shorts to YouTube
+      - name: Upload Shorts to YouTube as Unlisted
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_PRIVACY_STATUS: unlisted
           VIDEO_PATH: test_output/shorts_final.mp4
         run: |
-          export YOUTUBE_PUBLISH_AT=$(date -u -d "+1 day" +"%Y-%m-%dT%H:%M:%SZ")
-          echo "Calculated scheduled publishAt: $YOUTUBE_PUBLISH_AT"
+          echo "Evaluation Mode: Uploading as Unlisted (限定公開)..."
           if [ -f test_output/current_theme.json ]; then
             export YOUTUBE_VIDEO_TITLE=$(python -c "import json; print(json.load(open('test_output/current_theme.json'))['title'])")
             export YOUTUBE_VIDEO_DESCRIPTION=$(python -c "import json; t=json.load(open('test_output/current_theme.json')); print(f\"{t['title']}\n\n{t['narration']}\n\n#西田医院 #リハビリ #介護 #医療 #Shorts\")")
@@ -91,6 +93,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No theme state changes to commit."
           else
-            git commit -m "Update theme state after successful post [skip ci]"
+            git commit -m "Update theme state after successful unlisted post [skip ci]"
             git push origin main
           fi

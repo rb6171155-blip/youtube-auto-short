@@ -9,10 +9,11 @@ from googleapiclient.errors import HttpError
 CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 REFRESH_TOKEN = os.environ.get('YOUTUBE_REFRESH_TOKEN')
-PUBLISH_AT = os.environ.get('YOUTUBE_PUBLISH_AT')
+PUBLISH_AT = os.environ.get('YOUTUBE_PUBLISH_AT', '')
+PRIVACY_STATUS = os.environ.get('YOUTUBE_PRIVACY_STATUS', 'unlisted')
 VIDEO_PATH = os.environ.get('VIDEO_PATH', os.path.join('test_output', 'shorts_test.mp4'))
-VIDEO_TITLE = os.environ.get('YOUTUBE_VIDEO_TITLE', 'Test Shorts Scheduled Upload #Shorts')
-VIDEO_DESCRIPTION = os.environ.get('YOUTUBE_VIDEO_DESCRIPTION', 'Test scheduled Shorts upload via GitHub Actions. #Shorts')
+VIDEO_TITLE = os.environ.get('YOUTUBE_VIDEO_TITLE', '医療法人 西田医院 #Shorts')
+VIDEO_DESCRIPTION = os.environ.get('YOUTUBE_VIDEO_DESCRIPTION', '医療法人 西田医院公式 YouTube Shorts\n\n#西田医院 #リハビリ #介護 #医療 #Shorts')
 
 def get_authenticated_service():
     if not CLIENT_ID or not CLIENT_SECRET or not REFRESH_TOKEN:
@@ -36,17 +37,15 @@ def get_authenticated_service():
         print(f"Error authenticating with YouTube API: {e}", file=sys.stderr)
         sys.exit(1)
 
-def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=VIDEO_DESCRIPTION):
+def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, description=VIDEO_DESCRIPTION, privacy_status=PRIVACY_STATUS):
     if not os.path.exists(file_path):
         print(f"Error: Video file not found at {file_path}", file=sys.stderr)
         sys.exit(1)
 
-    if not publish_at:
-        print("Error: YOUTUBE_PUBLISH_AT environment variable is required (ISO 8601 UTC format).", file=sys.stderr)
-        sys.exit(1)
-
     print(f"Target video file: {file_path}")
-    print(f"Scheduled publish time (publishAt): {publish_at}")
+    print(f"Target privacyStatus: {privacy_status}")
+    if publish_at:
+        print(f"Scheduled publish time (publishAt): {publish_at}")
 
     # #Shortsタグが含まれていることを確認
     if '#Shorts' not in title and '#shorts' not in title:
@@ -58,14 +57,17 @@ def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=
         'snippet': {
             'title': title,
             'description': description,
-            'tags': ['Shorts', 'aquarium', 'relaxation']
+            'tags': ['Shorts', '西田医院', 'リハビリ', '介護', '医療']
         },
         'status': {
-            'privacyStatus': 'private',
-            'publishAt': publish_at,
+            'privacyStatus': privacy_status,
             'selfDeclaredMadeForKids': False
         }
     }
+
+    # publishAt が明示指定された場合のみ追加
+    if publish_at:
+        body['status']['publishAt'] = publish_at
 
     try:
         media = MediaFileUpload(file_path, chunksize=-1, resumable=True, mimetype='video/mp4')
@@ -75,7 +77,7 @@ def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=
             media_body=media
         )
 
-        print("Starting scheduled video upload to YouTube...")
+        print(f"Starting video upload to YouTube (privacyStatus: {privacy_status})...")
         response = None
         while response is None:
             status, response = request.next_chunk()
@@ -88,8 +90,9 @@ def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=
 
         print(f"Upload successful. Video ID: {video_id}")
         print(f"Uploaded Video Title: {snippet_info.get('title')}")
-        print(f"Privacy Status: {status_info.get('privacyStatus')}")
-        print(f"Confirmed publishAt: {status_info.get('publishAt')}")
+        print(f"Confirmed Privacy Status: {status_info.get('privacyStatus')}")
+        if 'publishAt' in status_info:
+            print(f"Confirmed publishAt: {status_info.get('publishAt')}")
 
         return response
     except HttpError as e:
@@ -101,7 +104,7 @@ def upload_video(youtube, file_path, publish_at, title=VIDEO_TITLE, description=
 
 def main():
     youtube = get_authenticated_service()
-    upload_video(youtube, VIDEO_PATH, PUBLISH_AT, VIDEO_TITLE, VIDEO_DESCRIPTION)
+    upload_video(youtube, VIDEO_PATH, PUBLISH_AT if PUBLISH_AT else None, VIDEO_TITLE, VIDEO_DESCRIPTION, PRIVACY_STATUS)
 
 if __name__ == '__main__':
     main()
