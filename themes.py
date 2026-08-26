@@ -1052,9 +1052,9 @@ def apply_variation_to_theme(theme, pattern_index=None, cta_index=None):
     else:
         t_copy['narration'] = template
 
-    # 背景クエリの選定（bg_queriesリストからランダム、またはbg_query）
-    bg_candidates = v.get('bg_queries', [v.get('bg_query', 'medical clinic')])
-    t_copy['bg_query'] = random.choice(bg_candidates)
+    # 背景クエリの選定（字幕内容に最も合致する第一優先クエリを先頭とし、優先順位リストを保持）
+    bg_candidates = v.get('bg_queries', [v.get('bg_query', 'medical consultation doctor clinic')])
+    t_copy['bg_query'] = bg_candidates[0] if bg_candidates else v.get('bg_query', 'medical clinic')
     t_copy['bg_queries'] = bg_candidates
 
     t_copy['pattern_id'] = v.get('pattern_id', 'PATTERN_SURPRISE')

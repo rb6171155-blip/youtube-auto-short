@@ -73,55 +73,51 @@ def format_text_to_lines(text, max_line_len=14):
     if best_3lines is not None:
         return best_3lines
 
-    # 3. 貪欲法フォールバック
+    # 3. 貪欲フォールバック
     lines = []
     curr = ""
-    for c in chunks:
-        if len(curr + c) <= max_line_len:
-            curr += c
+    for ch in chunks:
+        if len(curr) + len(ch) <= max_line_len:
+            curr += ch
         else:
             if curr:
                 lines.append(curr)
-            curr = c
+            curr = ch
     if curr:
         lines.append(curr)
     return lines
 
-def build_dynamic_scenes_from_timeline(sentences, total_video_duration=15.0):
+def build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=15.0):
     """
-    TTSの実際の文単位タイムスタンプから、音声と100%同期する字幕シーンを動的生成
+    edge-ttsのSentenceBoundaryメタデータ（実音声タイムスタンプ）から、
+    ナレーションと100%完全に一致・同期する動的字幕シーンを構築する。
     """
     dynamic_scenes = []
-    num_sentences = len(sentences)
+    num_sentences = len(sentence_timeline)
+    if num_sentences == 0:
+        return []
 
-    for i, s in enumerate(sentences):
-        sentence_text = s["text"]
-        start_t = s["start"]
-        end_t = s["end"]
+    for i, s in enumerate(sentence_timeline):
+        st = s['start']
+        et = s['end']
 
-        # シーン1の開始は動画の頭(0.0秒)から先行表示して視認性を確保
-        if i == 0:
-            scene_start = 0.0
+        # シーン開始：最初の文は0.00秒固定、以降は前文の終了時刻に合わせる
+        scene_start = 0.0 if i == 0 else max(0.0, st - 0.05)
+
+        # シーン終了：次文の開始直前まで表示を維持、最後の文は動画全体の終端まで伸ばす
+        if i < num_sentences - 1:
+            scene_end = sentence_timeline[i + 1]['start']
         else:
-            scene_start = start_t
+            scene_end = max(et, float(total_video_duration))
 
-        # 最後のシーン（CTA文）は動画終了(15.0秒)まで表示を継続
-        if i == num_sentences - 1:
-            scene_end = total_video_duration
-        else:
-            # 次の文が始まる直前まで表示を維持してチラつきを防止
-            next_start = sentences[i + 1]["start"]
-            scene_end = round(max(end_t, next_start), 2)
-
-        # BudouX を用いた美しい文脈・形態素バランシング改行
-        lines = format_text_to_lines(sentence_text, max_line_len=14)
+        raw_text = s['text'].strip()
+        balanced_lines = format_text_to_lines(raw_text)
 
         dynamic_scenes.append({
-            "start": scene_start,
-            "end": scene_end,
-            "speech_start": start_t,
-            "speech_end": end_t,
-            "lines": lines
+            'start': round(scene_start, 2),
+            'end': round(scene_end, 2),
+            'lines': balanced_lines,
+            'raw_text': raw_text
         })
 
     return dynamic_scenes
@@ -141,7 +137,17 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
             print(f"[PIPELINE ERROR] Preset background video not found at '{PRESET_BG_PATH}'", file=sys.stderr)
             sys.exit(1)
 
-    # テーマ選択：モード判定（テスト用シャッフルプール vs 本番日次ローテーション）
+    # テーマ選択：pexels_download.pyで保存された current_theme.json を最優先
+    if theme is None:
+        if os.path.exists(CURRENT_THEME_JSON):
+            try:
+                with open(CURRENT_THEME_JSON, 'r', encoding='utf-8') as f:
+                    theme = json.load(f)
+                    print(f"[PIPELINE SYNC] Loaded selected theme variation from {CURRENT_THEME_JSON}")
+            except Exception as e:
+                print(f"[PIPELINE WARNING] Failed to load {CURRENT_THEME_JSON}: {e}")
+                theme = None
+
     if theme is None:
         mode_env = os.environ.get('THEME_MODE', '').strip().upper()
         if mode == 'random' or mode == 'test' or mode_env in ['RANDOM', 'TEST']:
@@ -193,12 +199,7 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
         if os.path.exists(NARRATION_PATH):
             os.remove(NARRATION_PATH)
 
-    # 現在テーマ情報を一時保存
-    os.makedirs(os.path.dirname(os.path.abspath(CURRENT_THEME_JSON)), exist_ok=True)
-    with open(CURRENT_THEME_JSON, 'w', encoding='utf-8') as f:
-        json.dump(theme, f, ensure_ascii=False, indent=2)
-
-    # 2. 動画合成レンダリング
+    # 2. FFmpegによる合成
     build_shorts_video(
         input_video=input_video,
         output_video=output_video,
@@ -206,8 +207,18 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
         narration_path=NARRATION_PATH if tts_success else None
     )
 
+    # テーマ情報の更新保存
+    try:
+        with open(CURRENT_THEME_JSON, 'w', encoding='utf-8') as f:
+            json.dump(theme, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[PIPELINE WARNING] Failed to save {CURRENT_THEME_JSON}: {e}")
+
     print("=== Pipeline Execution Complete ===")
-    return theme
+    return output_video
+
+def main():
+    run_pipeline()
 
 if __name__ == '__main__':
-    run_pipeline()
+    main()

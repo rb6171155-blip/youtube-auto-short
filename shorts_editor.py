@@ -10,15 +10,23 @@ OUTPUT_DIR = "test_output"
 ASSETS_DIR = "assets"
 
 def get_font(size):
+    """
+    極太で視認性の高い日本語フォントを優先探索してロードする。
+    Ubuntu/GitHub Actions（NotoSansCJK-Bold）および Windows（Meiryo Bold / Yu Gothic Bold）の両環境に対応。
+    """
     candidates = [
+        # Ubuntu / Linux (GitHub Actions)
         "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
         "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+        # Windows
+        "C:\\Windows\\Fonts\\meiryob.ttc",
+        "C:\\Windows\\Fonts\\yugothb.ttc",
         "C:\\Windows\\Fonts\\meiryo.ttc",
         "C:\\Windows\\Fonts\\msgothic.ttc",
         "C:\\Windows\\Fonts\\yu-gothic-bold.ttf",
-        "C:\\Windows\\Fonts\\yugothb.ttc",
         "C:\\Windows\\Fonts\\arial.ttf"
     ]
     for font_path in candidates:
@@ -38,15 +46,16 @@ def create_scene_overlay(scene, index, output_dir):
     img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    main_font = get_font(52)
+    # メイン字幕フォント（視認性の高い極太 54pt）
+    main_font = get_font(54)
 
     # 字幕配置エリア設定（画面上方セーフエリア：ブランドヘッダー下付近）
-    box_w = 840
+    box_w = 860
     box_h = 280
-    box_x = (width - box_w) // 2 # 左右マージン 120px
-    box_y = 280                  # 画面上方
+    box_x = (width - box_w) // 2 # 左右マージン 110px
+    box_y = 260                  # 画面上方
 
-    # メイン字幕テキスト描画（画面上部・ドロップシャドウ付き白文字）
+    # メイン字幕テキスト描画（画面上部・高視認性ドロップシャドウ付き白文字）
     lines = scene.get('lines', [])
     if lines and main_font:
         line_spacing = 22
@@ -64,35 +73,43 @@ def create_scene_overlay(scene, index, output_dir):
             line_w = bbox[2] - bbox[0]
             line_x = (width - line_w) // 2
 
-            # ドロップシャドウ（可読性向上のため周囲に影を付与）
-            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2), (-2, -2), (2, 2), (-2, 2), (2, -2), (0, 3), (3, 3)]:
-                draw.text((line_x + dx, current_y + dy), line, font=main_font, fill=(0, 0, 0, 200))
+            # 高視認性ドロップシャドウ（全周囲多重アウトラインシャドウで背景動画から完全に浮き立たせる）
+            shadow_offsets = [
+                (-3, 0), (3, 0), (0, -3), (0, 3),
+                (-3, -3), (3, 3), (-3, 3), (3, -3),
+                (-2, -2), (2, 2), (-2, 2), (2, -2),
+                (0, 4), (0, 5), (3, 4), (-3, 4)
+            ]
+            for dx, dy in shadow_offsets:
+                draw.text((line_x + dx, current_y + dy), line, font=main_font, fill=(0, 0, 0, 230))
+
             # 白文字メインテキスト
             draw.text((line_x, current_y), line, font=main_font, fill=(255, 255, 255, 255))
 
             current_y += line_heights[i] + line_spacing
 
     # 画面上部 固定ヘッダー（「医療法人 西田医院」公式ブランド表示）
-    header_font = get_font(30)
+    # ※フォントサイズを約2倍（30pt -> 56pt）に拡大
+    header_font = get_font(56)
     if header_font:
         header_text = "医療法人 西田医院"
         h_bbox = draw.textbbox((0, 0), header_text, font=header_font)
         h_w = h_bbox[2] - h_bbox[0]
         h_h = h_bbox[3] - h_bbox[1]
 
-        h_badge_w = h_w + 44
-        h_badge_h = h_h + 20
+        h_badge_w = h_w + 56
+        h_badge_h = h_h + 26
         h_badge_x = (width - h_badge_w) // 2
-        h_badge_y = 120
+        h_badge_y = 100
 
         draw.rounded_rectangle(
             [h_badge_x, h_badge_y, h_badge_x + h_badge_w, h_badge_y + h_badge_h],
-            radius=14,
-            fill=(12, 24, 42, 190),
-            outline=(255, 255, 255, 45),
-            width=1
+            radius=18,
+            fill=(12, 24, 42, 205),
+            outline=(255, 255, 255, 55),
+            width=2
         )
-        draw.text((h_badge_x + 22, h_badge_y + 8), header_text, font=header_font, fill=(245, 248, 255, 255))
+        draw.text((h_badge_x + 28, h_badge_y + 11), header_text, font=header_font, fill=(245, 248, 255, 255))
 
     overlay_file = os.path.join(output_dir, f"overlay_scene_{index}.png")
     img.save(overlay_file, "PNG")
