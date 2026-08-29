@@ -1,31 +1,38 @@
-﻿# YouTube自動予約投稿プロジェクト 引き継ぎ資料
+﻿# YouTube自動予約投稿プロジェクト 引き継ぎ資料 (AI_HANDOVER.md)
 
 ## プロジェクト基本情報
 - プロジェクトルート: C:\Users\yuusu\.gemini\projects\youtube-auto-short
 - GitHubリポジトリ: https://github.com/rb6171155-blip/youtube-auto-short.git
 - デフォルトブランチ: main
+- Google Cloud Project: youtube-auto-short-production (Project Number: 1012793477083)
 
-## 現在のステータスと完成済み機能
-1. Pexels API動画取得（pexels_download.py）：GitHub Actions上でPexels APIから素材を取得・ダウンロード可能。
-2. ffmpegによる9:16 Shorts縦型変換（shorts_convert.py）：中央クロップおよび1080x1920（アスペクト比 0.5625）への変換・検証が完了。
-3. YouTube OAuth 2.0認証（YouTube Data API v3）：GitHub Secrets経由でのアクセストークン自動リフレッシュが完了。
-4. YouTube予約投稿・Shortsメタデータ設定（youtube_upload.py）：動的なタイトル・説明文・#Shortsタグ・非公開設定（privacyStatus: private）・指定未来日時の予約公開（publishAt）の設定に対応。
-5. 確定済み21テーマ シナリオ定義データ（themes.py）：
-   - 7カテゴリー（理念、外来リハ、通所リハ、通所介護、ISR、レッドコード、小規模多機能）各3テーマ＝計21テーマを完全登録。
-   - ナレーション原稿（聴覚用：完全文）と字幕原稿（視覚用：短文キーワード）を完全分離。
-   - select_next_theme() による読み込みと commit_theme_state() による投稿成功時確定保存。
-6. ナレーション・字幕・BGM統合動画生成パイプライン（generate_shorts_pipeline.py / shorts_editor.py / voice_generator.py）：
-   - ja-JP-NanamiNeural（話速 -5%）による高品質ナレーション。
-   - ナレーション主音声（volume=1.0）と控えめなアンビエントBGM（volume=0.06）のプロ品質ミキシング。
-   - TTS失敗時の自動フォールバック（字幕＋BGMモードへ自動切り替え、動画生成・予約投稿を100%完遂）。
-7. 本番自動投稿ワークフロー（.github/workflows/production_auto_post.yml）：
-   - 毎日JST 09:00（UTC 00:00）の定時自動実行（cron: '0 0 * * *'）および手動実行（workflow_dispatch / theme_id 指定可能）。
-   - concurrency による同時実行防止。
-   - 投稿成功時（if: success()）のみ state/theme_state.json を Git Commit & Push して自動ローテーションを確定。
+## システム全体像
+```text
+GitHub Actions (毎日JST 09:00 / cron: '0 0 * * *')
+  ↓
+1. Pexels APIよりテーマ別動画素材の取得 (pexels_download.py)
+  ↓
+2. 9:16 (1080x1920) Shortsフォーマット変換 (shorts_convert.py)
+  ↓
+3. テーマローテーション・ナレーション音声生成 (themes.py / voice_generator.py - ja-JP-NanamiNeural -5%)
+  ↓
+4. 文単位タイムスタンプに完全同期したBudouX字幕・BGM合成 (generate_shorts_pipeline.py / shorts_editor.py)
+  ↓
+5. 15秒Shorts完成動画生成 (test_output/shorts_final.mp4)
+  ↓
+6. Google OAuth 2.0 In-Production Refresh Token による認証 (youtube_upload.py)
+  ↓
+7. YouTube Data API v3 による動画アップロード + publishAt による24時間後予約公開
+  ↓
+8. 成功時のみ state/theme_state.json を Git Commit & Push して自動確定
+```
 
-## 最新テスト投稿結果（実証完了）
-- 実行ワークフロー：Daily Auto Post Shorts to YouTube (Run ID: 32457980210 / 実行時間: 2分39秒 / Success)
-- YouTube 動画ID：oftr0xIOi-A
-- 予約公開日時：2026-08-22T07:20:07Z
-- タイトル：痛みの先にある生活 #Shorts
-- テーマ状態：state/theme_state.json への保存およびリモートプッシュ完了（次回は theme_1_2 へ進行）。
+## 認証・Secrets構成
+- `PEXELS_API_KEY`: Pexels API動画取得用キー
+- `YOUTUBE_CLIENT_ID`: OAuth 2.0 クライアントID (Desktop App)
+- `YOUTUBE_CLIENT_SECRET`: OAuth 2.0 クライアントシークレット
+- `YOUTUBE_REFRESH_TOKEN`: In-Production 長期有効Refresh Token (Scope: `https://www.googleapis.com/auth/youtube.upload`)
+
+## 動作確認済みコマンド
+- OAuth認証テスト: `gh workflow run test_youtube_auth.yml --repo rb6171155-blip/youtube-auto-short`
+- 本番予約投稿ワークフロー手動実行: `gh workflow run production_auto_post.yml --repo rb6171155-blip/youtube-auto-short`

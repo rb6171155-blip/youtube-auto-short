@@ -42,6 +42,10 @@ def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, descrip
         print(f"Error: Video file not found at {file_path}", file=sys.stderr)
         sys.exit(1)
 
+    # 予約公開(publishAt)が指定されている場合、YouTube API仕様によりprivacyStatusは必ずprivateである必要がある
+    if publish_at:
+        privacy_status = 'private'
+
     print(f"Target video file: {file_path}")
     print(f"Target privacyStatus: {privacy_status}")
     if publish_at:
