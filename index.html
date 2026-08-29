@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Auto Short - アプリケーション概要 & プライバシーポリシー</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 15px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            font-size: 24px;
+            border-bottom: 2px solid #e8eaed;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #202124;
+            font-size: 18px;
+            margin-top: 25px;
+            border-left: 4px solid #1a73e8;
+            padding-left: 10px;
+        }
+        p, li {
+            font-size: 14px;
+            color: #3c4043;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #dadce0;
+            font-size: 12px;
+            color: #70757a;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Auto Short</h1>
+        <p>YouTube Auto Short は、作成したショート動画を自身のYouTubeチャンネルへ自動投稿するための個人用オートメーションツールです。</p>
+
+        <h2>アプリケーションの概要</h2>
+        <p>本アプリケーションは、YouTube Data API v3 を使用して、指定された動画ファイルを自身のYouTubeチャンネルに限定公開または予約投稿としてアップロードします。</p>
+
+        <h2>アクセスする権限（スコープ）</h2>
+        <p>本アプリは以下のGoogle OAuthスコープを利用します：</p>
+        <ul>
+            <li><code>https://www.googleapis.com/auth/youtube.upload</code>: 動画のアップロードおよびメタデータ（タイトル・説明等）の設定のみに使用します。</li>
+        </ul>
+
+        <h2>プライバシーポリシー</h2>
+        <p>本アプリケーション（YouTube Auto Short）におけるユーザー情報の取り扱いについて以下に定めます。</p>
+        
+        <h3>1. 収集する情報</h3>
+        <p>本アプリは、YouTube Data API の実行に必要なOAuth認証情報（アクセストークンおよびリフレッシュトークン）のみをローカル環境およびGitHub Secrets上で暗号化して保持します。その他の個人情報やブラウザ履歴などを収集することはありません。</p>
+
+        <h3>2. 情報の利用目的</h3>
+        <p>取得した認証情報は、ユーザー本人のYouTubeチャンネルへ動画をアップロードする自動処理の実行目的のみに使用されます。</p>
+
+        <h3>3. データの共有および第三者への提供</h3>
+        <p>収集した認証情報およびデータを、外部の第三者と共有、販売、または開示することは一切ありません。</p>
+
+        <h3>4. データの管理と保管</h3>
+        <p>認証情報は安全なCI/CD環境（GitHub Secrets）およびローカル環境でのみ管理され、外部からの不正アクセスを防止します。</p>
+
+        <h3>5. Google API サービスのユーザーデータポリシーへの準拠</h3>
+        <p>本アプリによるGoogle APIから取得した情報の使用および他のアプリへの転送は、制限事項要件を含め、<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API サービスのユーザーデータポリシー</a>に準拠します。</p>
+
+        <h2>お問い合わせ</h2>
+        <p>本アプリケーションおよびプライバシーポリシーに関するお問い合わせは、プロジェクト管理者までご連絡ください。</p>
+
+        <div class="footer">
+            <p>&copy; 2026 YouTube Auto Short Project. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
