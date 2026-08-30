@@ -6,11 +6,23 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 
+# ==============================================================================
+# アップロード公開設定スイッチ
+# ==============================================================================
+# ENABLE_SCHEDULED_PUBLISH:
+#   False: 事前チェック用「限定公開（unlisted）」モード（予約公開 publishAt を無効化）
+#   True : 本番運用用「24時間後予約公開（publishAt + private）」モード
+ENABLE_SCHEDULED_PUBLISH = False
+
+# デフォルトのプライバシーステータス（ENABLE_SCHEDULED_PUBLISH = False 時に適用）
+DEFAULT_PRIVACY_STATUS = 'unlisted'
+# ==============================================================================
+
 CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 REFRESH_TOKEN = os.environ.get('YOUTUBE_REFRESH_TOKEN')
 PUBLISH_AT = os.environ.get('YOUTUBE_PUBLISH_AT', '')
-PRIVACY_STATUS = os.environ.get('YOUTUBE_PRIVACY_STATUS', 'unlisted')
+PRIVACY_STATUS = os.environ.get('YOUTUBE_PRIVACY_STATUS', DEFAULT_PRIVACY_STATUS)
 VIDEO_PATH = os.environ.get('VIDEO_PATH', os.path.join('test_output', 'shorts_test.mp4'))
 VIDEO_TITLE = os.environ.get('YOUTUBE_VIDEO_TITLE', '医療法人 西田医院 #Shorts')
 VIDEO_DESCRIPTION = os.environ.get('YOUTUBE_VIDEO_DESCRIPTION', '医療法人 西田医院公式 YouTube Shorts\n\n#西田医院 #リハビリ #介護 #医療 #Shorts')
@@ -37,7 +49,7 @@ def get_authenticated_service():
         print(f"Error authenticating with YouTube API: {e}", file=sys.stderr)
         sys.exit(1)
 
-def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, description=VIDEO_DESCRIPTION, privacy_status=PRIVACY_STATUS):
+def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, description=VIDEO_DESCRIPTION, privacy_status=DEFAULT_PRIVACY_STATUS):
     if not os.path.exists(file_path):
         print(f"Error: Video file not found at {file_path}", file=sys.stderr)
         sys.exit(1)
@@ -50,6 +62,8 @@ def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, descrip
     print(f"Target privacyStatus: {privacy_status}")
     if publish_at:
         print(f"Scheduled publish time (publishAt): {publish_at}")
+    else:
+        print("Scheduled publish (publishAt): Disabled (Instant Upload)")
 
     # #Shortsタグが含まれていることを確認
     if '#Shorts' not in title and '#shorts' not in title:
@@ -108,7 +122,25 @@ def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, descrip
 
 def main():
     youtube = get_authenticated_service()
-    upload_video(youtube, VIDEO_PATH, PUBLISH_AT if PUBLISH_AT else None, VIDEO_TITLE, VIDEO_DESCRIPTION, PRIVACY_STATUS)
+
+    # スイッチフラグによるモード判定
+    if ENABLE_SCHEDULED_PUBLISH:
+        target_publish_at = PUBLISH_AT if PUBLISH_AT else None
+        target_privacy_status = 'private'
+        print("[MODE] Scheduled Publish Mode ACTIVE (publishAt enabled, privacyStatus: private)")
+    else:
+        target_publish_at = None
+        target_privacy_status = PRIVACY_STATUS if PRIVACY_STATUS else DEFAULT_PRIVACY_STATUS
+        print(f"[MODE] Unlisted Evaluation Mode ACTIVE (publishAt disabled, privacyStatus: {target_privacy_status})")
+
+    upload_video(
+        youtube=youtube,
+        file_path=VIDEO_PATH,
+        publish_at=target_publish_at,
+        title=VIDEO_TITLE,
+        description=VIDEO_DESCRIPTION,
+        privacy_status=target_privacy_status
+    )
 
 if __name__ == '__main__':
     main()
