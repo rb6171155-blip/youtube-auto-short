@@ -1,25 +1,31 @@
 ﻿import os
 import sys
 import json
-from voice_generator import generate_voice_with_timeline, generate_voice
+import budoux
+from voice_generator import generate_voice_with_timeline
 from shorts_editor import build_shorts_video
-from themes import DEFAULT_THEME, get_theme_by_id, get_all_themes, select_next_theme, select_random_test_theme, commit_theme_state
+from themes import select_next_theme, select_random_test_theme
 
+# ディレクトリ・パス設定
+OUTPUT_DIR = 'test_output'
+NARRATION_PATH = os.path.join(OUTPUT_DIR, 'narration.mp3')
+PRESET_BG_PATH = os.path.join('assets', 'preset_bg_short.mp4')
+CURRENT_THEME_JSON = os.path.join(OUTPUT_DIR, 'current_theme.json')
+
+INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join(OUTPUT_DIR, 'shorts_test.mp4'))
+OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join(OUTPUT_DIR, 'shorts_final.mp4'))
+
+# BudouX 日本語パーサー初期化（文脈・単語境界保持用）
 try:
-    import budoux
     _budoux_parser = budoux.load_default_japanese_parser()
-except Exception:
+except Exception as e:
+    print(f"[PIPELINE WARNING] Failed to load BudouX parser: {e}", file=sys.stderr)
     _budoux_parser = None
-
-INPUT_VIDEO = os.environ.get('INPUT_VIDEO', os.path.join('test_output', 'shorts_test.mp4'))
-OUTPUT_VIDEO = os.environ.get('OUTPUT_VIDEO', os.path.join('test_output', 'tts_video_test.mp4'))
-NARRATION_PATH = os.path.join('test_output', 'narration.mp3')
-CURRENT_THEME_JSON = os.path.join('test_output', 'current_theme.json')
-PRESET_BG_PATH = os.path.join('assets', 'videos', 'default_medical_bg.mp4')
 
 def format_text_to_lines(text, max_line_len=14):
     """
     BudouX（日本語形態素・文脈分節解析）を活用し、
+    一文字たりとも変更・省略・要約せず、
     意味のまとまり（単語・文脈の区切り）を崩さずに
     行ごとの文字数バランスが最も美しくなるよう適切に改行する
     """
@@ -73,7 +79,7 @@ def format_text_to_lines(text, max_line_len=14):
     if best_3lines is not None:
         return best_3lines
 
-    # 3. 貪欲フォールバック
+    # 3. 貪欲フォールバック（文字結合順序完全保証）
     lines = []
     curr = ""
     for ch in chunks:
@@ -90,7 +96,7 @@ def format_text_to_lines(text, max_line_len=14):
 def build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=15.0):
     """
     edge-ttsのSentenceBoundaryメタデータ（実音声タイムスタンプ）から、
-    ナレーションと100%完全に一致・同期する動的字幕シーンを構築する。
+    ナレーションと100%一文字一句違わない完全一致・完全同期の動的字幕シーンを構築する。
     """
     dynamic_scenes = []
     num_sentences = len(sentence_timeline)
@@ -120,6 +126,39 @@ def build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=1
             'raw_text': raw_text
         })
 
+    return dynamic_scenes
+
+def build_fallback_scenes_from_narration(narration_text, total_video_duration=15.0):
+    """
+    TTSフォールバック時でも、ナレーション原稿（Single Source of Truth）を一文字一句変えずに
+    句読点ベースで分割し、100%完全一致の動的字幕シーンを構築する
+    """
+    import re
+    raw_sentences = [s.strip() for s in re.split(r'([。！？!?])', narration_text) if s.strip()]
+    merged_sentences = []
+    for s in raw_sentences:
+        if s in ['。', '！', '？', '!', '?'] and merged_sentences:
+            merged_sentences[-1] += s
+        else:
+            merged_sentences.append(s)
+
+    if not merged_sentences:
+        merged_sentences = [narration_text]
+
+    num_sentences = len(merged_sentences)
+    duration_per_scene = float(total_video_duration) / max(1, num_sentences)
+
+    dynamic_scenes = []
+    for i, raw_text in enumerate(merged_sentences):
+        scene_start = i * duration_per_scene
+        scene_end = total_video_duration if i == num_sentences - 1 else (i + 1) * duration_per_scene
+        balanced_lines = format_text_to_lines(raw_text)
+        dynamic_scenes.append({
+            'start': round(scene_start, 2),
+            'end': round(scene_end, 2),
+            'lines': balanced_lines,
+            'raw_text': raw_text
+        })
     return dynamic_scenes
 
 def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
@@ -155,6 +194,7 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
         else:
             theme = select_next_theme()
 
+    # Single Source of Truth: ナレーション原稿
     narration_text = theme.get('narration', '').strip()
     print("=== YouTube Shorts Generation Pipeline ===")
     print(f"Theme ID: {theme.get('theme_id')}")
@@ -173,11 +213,19 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
     )
 
     if tts_success and sentence_timeline:
-        print("[PIPELINE] TTS generation SUCCESS. Building synchronized dynamic scenes.")
+        print("[PIPELINE] TTS generation SUCCESS. Building synchronized dynamic scenes from narration.")
         dynamic_scenes = build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=15.0)
         theme['scenes'] = dynamic_scenes
 
-        # [VIDEO VARIATION] ログ出力（指示要件準拠）
+        # ナレーションと字幕の一致検証ログ出力
+        reconstructed_text = "".join(sc['raw_text'] for sc in dynamic_scenes)
+        is_exact_match = (narration_text == reconstructed_text)
+        print(f"[VERIFICATION] Master Narration vs Subtitle Timeline Exact Match: {is_exact_match}")
+        if not is_exact_match:
+            print(f"[VERIFICATION WARNING] Narration: \"{narration_text}\"")
+            print(f"[VERIFICATION WARNING] Subtitle:  \"{reconstructed_text}\"")
+
+        # [VIDEO VARIATION] ログ出力
         print("\n[VIDEO VARIATION]")
         print(f"Theme: {theme.get('theme_id')} ({theme.get('title')})")
         print(f"Hook: {theme.get('hook_type', 'SURPRISE')}")
@@ -191,13 +239,16 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
             print(f"  start={sc['start']:.2f}")
             print(f"  end={sc['end']:.2f}")
             print(f"  text={' / '.join(sc['lines'])}")
+            print(f"  raw_text={sc['raw_text']}")
         print(f"Audio duration: {sentence_timeline[-1]['end']:.2f}s")
         print(f"Video duration: 15.00s\n")
 
     else:
-        print("[PIPELINE] [FALLBACK ACTIVE] TTS generation FAILED. Using existing scene fallback.")
+        print("[PIPELINE] [FALLBACK ACTIVE] TTS generation FAILED. Using dynamic scenes from narration.")
         if os.path.exists(NARRATION_PATH):
             os.remove(NARRATION_PATH)
+        dynamic_scenes = build_fallback_scenes_from_narration(narration_text, total_video_duration=15.0)
+        theme['scenes'] = dynamic_scenes
 
     # 2. FFmpegによる合成
     build_shorts_video(
