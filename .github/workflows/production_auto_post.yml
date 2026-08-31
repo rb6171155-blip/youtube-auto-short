@@ -2,8 +2,10 @@
 
 on:
   schedule:
-    # 毎日 日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00 に自動実行
+    # 第1回: 毎日 日本時間(JST) 午前09:00 = 協定世界時(UTC) 午前00:00
     - cron: '0 0 * * *'
+    # 第2回: 毎日 日本時間(JST) 午後12:30 = 協定世界時(UTC) 午前03:30
+    - cron: '30 3 * * *'
   workflow_dispatch:
     inputs:
       theme_id:
