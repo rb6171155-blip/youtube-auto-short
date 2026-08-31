@@ -3,11 +3,11 @@ import sys
 import re
 import asyncio
 import edge_tts
-from pronunciation_dict import apply_pronunciation_dict
+from pronunciation_dict import get_spoken_text
 
 OUTPUT_DIR = "test_output"
 DEFAULT_VOICE = "ja-JP-NanamiNeural"
-DEFAULT_RATE = "-5%"
+DEFAULT_RATE = "+0%"
 DEFAULT_PITCH = "+0Hz"
 
 async def _generate_edge_tts_with_timeline(text, output_path, voice=DEFAULT_VOICE, rate=DEFAULT_RATE, pitch=DEFAULT_PITCH):
@@ -61,7 +61,7 @@ def _split_into_display_sentences(text):
 def generate_voice_with_timeline(text, output_path, voice_config=None, display_text=None):
     """
     ナレーション音声を生成し、文単位の正確な実音声タイムラインを返す。
-    発音補正辞書（pronunciation_dict）を適用し、画面字幕用の漢字表記（display_text）と
+    発音・プロソディ補正（pronunciation_dict）を適用し、画面字幕用の漢字表記（display_text）と
     TTS読み上げ用テキスト（spoken_text）を分離して処理する。
     """
     if voice_config is None:
@@ -74,8 +74,8 @@ def generate_voice_with_timeline(text, output_path, voice_config=None, display_t
     rate = voice_config.get('rate', DEFAULT_RATE)
     pitch = voice_config.get('pitch', DEFAULT_PITCH)
 
-    # 発音補正の適用（字幕原文は維持し、TTS用テキストのみ補正）
-    spoken_text = apply_pronunciation_dict(text)
+    # 発音補正＋プロソディ（ブレス）補正の適用（字幕原文は維持し、TTS用テキストのみ補正）
+    spoken_text = get_spoken_text(text)
 
     print(f"[TTS] Generating narration with timeline from edge-tts...")
     print(f"[TTS] Voice: {voice}, Rate: {rate}, Pitch: {pitch}")
@@ -107,8 +107,8 @@ def generate_voice(text, output_path, provider="edge", voice_config=None):
     return success
 
 if __name__ == '__main__':
-    sample_text = "ふらつきやすい姿勢を整えたい方へ。自分の体重を利用したレッドコードで、体の奥の筋肉を刺激します。詳しくはプロフィールへ。"
-    test_out = os.path.join(OUTPUT_DIR, "tts_pronunciation_test.mp3")
+    sample_text = "ふらつきやすい姿勢を整えたい方へ。自分の体重を利用したレッドコードで、体の奥の筋肉を刺激します。西田医院の取り組みはプロフィールから。"
+    test_out = os.path.join(OUTPUT_DIR, "tts_prosody_test.mp3")
     ok, timeline = generate_voice_with_timeline(sample_text, test_out)
     for idx, sc in enumerate(timeline):
         print(f"Sentence {idx+1}: Display=\"{sc['text']}\" Spoken=\"{sc['spoken_text']}\" Time={sc['start']}s->{sc['end']}s")

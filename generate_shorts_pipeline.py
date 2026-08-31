@@ -205,11 +205,11 @@ def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):
     print(f"Angle: {theme.get('angle', '')}")
     print(f"Narration Master Text (Single Source of Truth): \"{narration_text}\"")
 
-    # 1. TTS音声生成＆文単位タイムスタンプの取得
+    # 1. TTS音声生成＆文単位タイムスタンプの取得（Nanami / Rate +0% / Pitch +0Hz 標準）
     tts_success, sentence_timeline = generate_voice_with_timeline(
         text=narration_text,
         output_path=NARRATION_PATH,
-        voice_config={'voice': 'ja-JP-NanamiNeural', 'rate': '-5%'}
+        voice_config={'voice': 'ja-JP-NanamiNeural', 'rate': '+0%', 'pitch': '+0Hz'}
     )
 
     if tts_success and sentence_timeline:
