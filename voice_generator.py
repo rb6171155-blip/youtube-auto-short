@@ -1,7 +1,9 @@
 ﻿import os
 import sys
+import re
 import asyncio
 import edge_tts
+from pronunciation_dict import apply_pronunciation_dict
 
 OUTPUT_DIR = "test_output"
 DEFAULT_VOICE = "ja-JP-NanamiNeural"
@@ -27,6 +29,7 @@ async def _generate_edge_tts_with_timeline(text, output_path, voice=DEFAULT_VOIC
             end_sec = start_sec + dur_sec
             sentence_text = chunk["text"]
             sentences.append({
+                "spoken_text": sentence_text,
                 "text": sentence_text,
                 "start": round(start_sec, 2),
                 "end": round(end_sec, 2),
@@ -42,23 +45,53 @@ async def _generate_edge_tts_with_timeline(text, output_path, voice=DEFAULT_VOIC
 
     return sentences
 
-def generate_voice_with_timeline(text, output_path, voice_config=None):
+def _split_into_display_sentences(text):
     """
-    ナレーション音声を生成し、文単位の正確な実音声タイムラインを返す
+    ナレーション原文を句読点（。！？）単位で分割し、句読点を保持した文リストを返す
+    """
+    raw_sentences = [s.strip() for s in re.split(r'([。！？!?])', text) if s.strip()]
+    merged = []
+    for s in raw_sentences:
+        if s in ['。', '！', '？', '!', '?'] and merged:
+            merged[-1] += s
+        else:
+            merged.append(s)
+    return merged if merged else [text]
+
+def generate_voice_with_timeline(text, output_path, voice_config=None, display_text=None):
+    """
+    ナレーション音声を生成し、文単位の正確な実音声タイムラインを返す。
+    発音補正辞書（pronunciation_dict）を適用し、画面字幕用の漢字表記（display_text）と
+    TTS読み上げ用テキスト（spoken_text）を分離して処理する。
     """
     if voice_config is None:
         voice_config = {}
+
+    if display_text is None:
+        display_text = text
 
     voice = voice_config.get('voice', DEFAULT_VOICE)
     rate = voice_config.get('rate', DEFAULT_RATE)
     pitch = voice_config.get('pitch', DEFAULT_PITCH)
 
+    # 発音補正の適用（字幕原文は維持し、TTS用テキストのみ補正）
+    spoken_text = apply_pronunciation_dict(text)
+
     print(f"[TTS] Generating narration with timeline from edge-tts...")
     print(f"[TTS] Voice: {voice}, Rate: {rate}, Pitch: {pitch}")
-    print(f"[TTS] Text: \"{text}\"")
+    print(f"[TTS] Display Text (字幕): \"{display_text}\"")
+    print(f"[TTS] Spoken Text  (音声): \"{spoken_text}\"")
 
     try:
-        sentences = asyncio.run(_generate_edge_tts_with_timeline(text, output_path, voice, rate, pitch))
+        sentences = asyncio.run(_generate_edge_tts_with_timeline(spoken_text, output_path, voice, rate, pitch))
+        
+        # 字幕表示用テキスト（原文の漢字表記）を各文のタイムラインにマッピング
+        display_sentences = _split_into_display_sentences(display_text)
+        for i, s in enumerate(sentences):
+            if i < len(display_sentences):
+                s['text'] = display_sentences[i]
+                s['display_text'] = display_sentences[i]
+
         file_size = os.path.getsize(output_path)
         print(f"[TTS SUCCESS] Generated: {output_path} ({file_size} bytes, {len(sentences)} sentences)")
         return True, sentences
@@ -74,7 +107,8 @@ def generate_voice(text, output_path, provider="edge", voice_config=None):
     return success
 
 if __name__ == '__main__':
-    sample_text = "痛みを和らげること。それはゴールではなく、スタートです。西田医院では、あなたが笑顔で暮らせるよう一緒に考えます。詳しくはプロフィールへ。"
-    test_out = os.path.join(OUTPUT_DIR, "tts_timeline_test.mp3")
+    sample_text = "ふらつきやすい姿勢を整えたい方へ。自分の体重を利用したレッドコードで、体の奥の筋肉を刺激します。詳しくはプロフィールへ。"
+    test_out = os.path.join(OUTPUT_DIR, "tts_pronunciation_test.mp3")
     ok, timeline = generate_voice_with_timeline(sample_text, test_out)
-    print("Timeline result:", json.dumps(timeline, ensure_ascii=False, indent=2))
+    for idx, sc in enumerate(timeline):
+        print(f"Sentence {idx+1}: Display=\"{sc['text']}\" Spoken=\"{sc['spoken_text']}\" Time={sc['start']}s->{sc['end']}s")
