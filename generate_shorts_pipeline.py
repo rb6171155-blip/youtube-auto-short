@@ -96,25 +96,33 @@ def format_text_to_lines(text, max_line_len=14):
 def build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=15.0):
     """
     edge-ttsのSentenceBoundaryメタデータ（実音声タイムスタンプ）から、
-    ナレーションと100%一文字一句違わない完全一致・完全同期の動的字幕シーンを構築する。
+    字幕重複（オーバーラップ）を0msに完全クランプし、
+    ナレーションと完全同期する動的字幕シーンを構築する。
     """
-    dynamic_scenes = []
     num_sentences = len(sentence_timeline)
     if num_sentences == 0:
         return []
 
+    # 1. 各シーンの基準開始時刻を決定（最初の文は0.00s固定、以降は音声開始時刻）
+    starts = []
     for i, s in enumerate(sentence_timeline):
-        st = s['start']
-        et = s['end']
-
-        # シーン開始：最初の文は0.00秒固定、以降は前文の終了時刻に合わせる
-        scene_start = 0.0 if i == 0 else max(0.0, st - 0.05)
-
-        # シーン終了：次文の開始直前まで表示を維持、最後の文は動画全体の終端まで伸ばす
-        if i < num_sentences - 1:
-            scene_end = sentence_timeline[i + 1]['start']
+        if i == 0:
+            starts.append(0.0)
         else:
-            scene_end = max(et, float(total_video_duration))
+            starts.append(round(max(0.0, s['start']), 2))
+
+    # 2. 前の終了時刻 ＝ 次の開始時刻 となるよう完全クランプ
+    dynamic_scenes = []
+    for i, s in enumerate(sentence_timeline):
+        scene_start = starts[i]
+        if i < num_sentences - 1:
+            scene_end = starts[i + 1]
+        else:
+            scene_end = round(max(s['end'], float(total_video_duration)), 2)
+
+        # 安全ガード：終了時刻が開始時刻以下にならないよう補正
+        if scene_end <= scene_start:
+            scene_end = round(scene_start + max(0.5, s.get('duration', 1.0)), 2)
 
         raw_text = s['text'].strip()
         balanced_lines = format_text_to_lines(raw_text)
@@ -126,12 +134,16 @@ def build_dynamic_scenes_from_timeline(sentence_timeline, total_video_duration=1
             'raw_text': raw_text
         })
 
+    # 3. 重複ゼロ（scene[i].end == scene[i+1].start）を完全保証
+    for i in range(len(dynamic_scenes) - 1):
+        dynamic_scenes[i]['end'] = dynamic_scenes[i + 1]['start']
+
     return dynamic_scenes
 
 def build_fallback_scenes_from_narration(narration_text, total_video_duration=15.0):
     """
     TTSフォールバック時でも、ナレーション原稿（Single Source of Truth）を一文字一句変えずに
-    句読点ベースで分割し、100%完全一致の動的字幕シーンを構築する
+    句読点ベースで分割し、完全整列・重複ゼロの動的字幕シーンを構築する
     """
     import re
     raw_sentences = [s.strip() for s in re.split(r'([。！？!?])', narration_text) if s.strip()]
@@ -150,8 +162,8 @@ def build_fallback_scenes_from_narration(narration_text, total_video_duration=15
 
     dynamic_scenes = []
     for i, raw_text in enumerate(merged_sentences):
-        scene_start = i * duration_per_scene
-        scene_end = total_video_duration if i == num_sentences - 1 else (i + 1) * duration_per_scene
+        scene_start = round(i * duration_per_scene, 2)
+        scene_end = round(total_video_duration if i == num_sentences - 1 else (i + 1) * duration_per_scene, 2)
         balanced_lines = format_text_to_lines(raw_text)
         dynamic_scenes.append({
             'start': round(scene_start, 2),
@@ -159,6 +171,10 @@ def build_fallback_scenes_from_narration(narration_text, total_video_duration=15
             'lines': balanced_lines,
             'raw_text': raw_text
         })
+
+    for i in range(len(dynamic_scenes) - 1):
+        dynamic_scenes[i]['end'] = dynamic_scenes[i + 1]['start']
+
     return dynamic_scenes
 
 def run_pipeline(theme=None, input_video=None, output_video=None, mode=None):

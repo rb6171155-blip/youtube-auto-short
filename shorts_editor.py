@@ -180,6 +180,11 @@ def build_shorts_video(input_video, output_video, theme=None, narration_path=Non
 
     scenes = theme.get('scenes', [])
 
+    # レンダリング直前でのタイムコード・クランプ処理（直前の終了 <= 次の開始を二重保証）
+    num_scenes = len(scenes)
+    for idx in range(num_scenes - 1):
+        scenes[idx]['end'] = min(scenes[idx]['end'], scenes[idx + 1]['start'])
+
     overlay_files = []
     for idx, scene in enumerate(scenes):
         f = create_scene_overlay(scene, idx, OUTPUT_DIR)
@@ -203,14 +208,21 @@ def build_shorts_video(input_video, output_video, theme=None, narration_path=Non
     for ov in overlay_files:
         ffmpeg_inputs.extend(['-i', ov])
 
+    # レンダリング時のオーバーラップ完全防止フィルター
+    # 途中シーン: gte(t, st) * lt(t, et) （半開区間 [st, et) とすることで境界フレームでの重複描画を0に抑制）
+    # 最終シーン: gte(t, st) * lte(t, et) （動画末尾まで完全表示）
     filter_chains = []
     last_v = "[0:v]"
     for idx, scene in enumerate(scenes):
         in_idx = overlay_start_idx + idx
-        next_v = f"[v{idx}]" if idx < len(scenes) - 1 else "[vout]"
+        next_v = f"[v{idx}]" if idx < num_scenes - 1 else "[vout]"
         st = scene['start']
         et = scene['end']
-        filter_chains.append(f"{last_v}[{in_idx}:v]overlay=enable='between(t,{st},{et})':format=auto{next_v}")
+        if idx < num_scenes - 1:
+            enable_expr = f"gte(t\\,{st})*lt(t\\,{et})"
+        else:
+            enable_expr = f"gte(t\\,{st})*lte(t\\,{et})"
+        filter_chains.append(f"{last_v}[{in_idx}:v]overlay=enable='{enable_expr}':format=auto{next_v}")
         last_v = next_v
 
     if has_narration:
