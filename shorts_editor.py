@@ -97,8 +97,9 @@ def create_scene_overlay(scene, index, output_dir):
         h_w = h_bbox[2] - h_bbox[0]
         h_h = h_bbox[3] - h_bbox[1]
 
-        h_badge_w = h_w + 56
-        h_badge_h = h_h + 26
+        # 上下左右のパディング調整（下の枠線切れ防止）
+        h_badge_w = h_w + 60
+        h_badge_h = h_h + 40
         h_badge_x = (width - h_badge_w) // 2
         h_badge_y = 100
 
@@ -109,7 +110,11 @@ def create_scene_overlay(scene, index, output_dir):
             outline=(255, 255, 255, 55),
             width=2
         )
-        draw.text((h_badge_x + 28, h_badge_y + 11), header_text, font=header_font, fill=(245, 248, 255, 255))
+
+        # 上下左右中央揃えで描画（フォントバウンディングボックスのオフセットを補正）
+        text_x = h_badge_x + (h_badge_w - h_w) // 2 - h_bbox[0]
+        text_y = h_badge_y + (h_badge_h - h_h) // 2 - h_bbox[1]
+        draw.text((text_x, text_y), header_text, font=header_font, fill=(245, 248, 255, 255))
 
     overlay_file = os.path.join(output_dir, f"overlay_scene_{index}.png")
     img.save(overlay_file, "PNG")
