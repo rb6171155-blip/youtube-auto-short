@@ -1,10 +1,10 @@
 {
-  "last_theme_index": 4,
-  "last_index": 4,
-  "last_theme_id": "theme_2_2",
+  "last_theme_index": 5,
+  "last_index": 5,
+  "last_theme_id": "theme_2_3",
   "category": "外来リハ",
-  "title": "姿勢と歩き方の見直し #Shorts",
-  "pattern_id": "PATTERN_QUESTION",
-  "hook_type": "QUESTION",
-  "updated_at": "33932087882"
+  "title": "筋力だけではない体の使い方 #Shorts",
+  "pattern_id": "PATTERN_COMMON_MISTAKE",
+  "hook_type": "COMMON_MISTAKE",
+  "updated_at": "33942227044"
 }
