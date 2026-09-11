@@ -729,14 +729,14 @@ THEMES = [
     {
         "theme_id": "theme_6_1",
         "category": "レッドコード",
-        "title": "赤いロープで体を支える運動 #Shorts",
+        "title": "痛くない転ばない赤いロープ運動 #Shorts",
         "variations": [
             {
                 "pattern_id": "PATTERN_SURPRISE",
                 "hook_type": "SURPRISE",
                 "structure_type": "HOOK → EXPLANATION → CTA",
-                "angle": "天井から吊るされた赤いロープが体重を支える安心構造",
-                "narration_template": "天井から吊るされた赤いロープ。体重をやさしく支えるため、関節に負担をかけずに運動できます。{cta}",
+                "angle": "両手でロープを握るから転ぶ心配ゼロの安心健康運動",
+                "narration_template": "痛くない、転ばない、無理がない。両手で赤いロープを握って体を預けるから、膝や腰に負担なく運動できます。{cta}",
                 "bg_query": "sling suspension therapy rehabilitation exercise",
                 "bg_queries": [
                     "sling suspension therapy rehabilitation exercise",
@@ -748,8 +748,8 @@ THEMES = [
                 "pattern_id": "PATTERN_COMMON_MISTAKE",
                 "hook_type": "COMMON_MISTAKE",
                 "structure_type": "COMMON_MISTAKE → CORRECTION → CTA",
-                "angle": "膝腰の痛みで運動を諦めていた方への免荷運動",
-                "narration_template": "腰や膝が痛くて運動を諦めていませんか？体重をロープに預けることで、無理なく安全に体を動かせます。{cta}",
+                "angle": "膝や腰の痛みで運動を諦めていた方への安心免荷運動",
+                "narration_template": "膝や腰が痛くて運動を諦めていませんか？赤いロープが体重を支えてくれるため、痛みなく安全に体を動かせます。{cta}",
                 "bg_query": "redcord sling therapy patient exercise",
                 "bg_queries": [
                     "redcord sling therapy patient exercise",
@@ -761,8 +761,8 @@ THEMES = [
                 "pattern_id": "PATTERN_BENEFIT",
                 "hook_type": "BENEFIT",
                 "structure_type": "BENEFIT → METHOD → CTA",
-                "angle": "ノルウェー発祥の体幹安定化運動療法",
-                "narration_template": "ノルウェー発祥の運動療法、レッドコード。余分な緊張をほぐしながら、体幹の安定性を高めます。{cta}",
+                "angle": "両手で体を預けて関節負担を減らすノルウェー発祥機器",
+                "narration_template": "ノルウェー生まれのレッドコード。頑丈なロープを両手で握るだけで、関節への負担を最小限に運動できます。{cta}",
                 "bg_query": "suspension sling training physiotherapy",
                 "bg_queries": [
                     "suspension sling training physiotherapy",
@@ -775,14 +775,14 @@ THEMES = [
     {
         "theme_id": "theme_6_2",
         "category": "レッドコード",
-        "title": "自重を使った無理のない体幹訓練 #Shorts",
+        "title": "握るだけで体幹を鍛える新習慣 #Shorts",
         "variations": [
             {
                 "pattern_id": "PATTERN_SCENE",
                 "hook_type": "SCENE",
                 "structure_type": "SCENE → INSIGHT → CTA",
-                "angle": "ふらつきやすい姿勢を自重刺激で整えるインナーマッスルトレ",
-                "narration_template": "ふらつきやすい姿勢を整えたい方へ。自分の体重を利用したレッドコードで、体の奥の筋肉を刺激します。{cta}",
+                "angle": "もたれかかるだけで肩甲骨ほぐしから安全スクワットまで",
+                "narration_template": "赤いロープを握ってもたれかかるだけ。肩甲骨のストレッチから膝を痛めないスクワットまで、安全に行えます。{cta}",
                 "bg_query": "core balance rehabilitation training",
                 "bg_queries": [
                     "core balance rehabilitation training",
@@ -794,8 +794,8 @@ THEMES = [
                 "pattern_id": "PATTERN_QUESTION",
                 "hook_type": "QUESTION",
                 "structure_type": "QUESTION → REASON → CTA",
-                "angle": "立ち止まった時のグラつきとぶれない姿勢づくり",
-                "narration_template": "立ち止まったときにグラつくことはありませんか？ロープを使った体幹刺激で、ぶれない安定した立ち姿勢をつくります。{cta}",
+                "angle": "ハードな運動が不安な方でも自然に働く体幹バランス",
+                "narration_template": "体幹を鍛えたいけれどハードな運動は不安？ロープに体重を預けて少し傾くだけで、深層部の筋肉が自然と働きます。{cta}",
                 "bg_query": "balance exercise physical therapy senior",
                 "bg_queries": [
                     "balance exercise physical therapy senior",
@@ -807,8 +807,8 @@ THEMES = [
                 "pattern_id": "PATTERN_BENEFIT",
                 "hook_type": "BENEFIT",
                 "structure_type": "BENEFIT → METHOD → CTA",
-                "angle": "重い負荷を使わずに安全に体幹を鍛える方法",
-                "narration_template": "無理な筋トレなしで体幹を鍛える方法。自重を使った安全なトレーニングで、安定した歩行をサポートします。{cta}",
+                "angle": "体重をロープに預けて深層筋肉にピンポイントで効く",
+                "narration_template": "ピンポイントで効くのに体に優しい。体重をロープに預けることで、普段使えないインナーマッスルを刺激します。{cta}",
                 "bg_query": "rehabilitation sling training indoor",
                 "bg_queries": [
                     "rehabilitation sling training indoor",
@@ -821,14 +821,14 @@ THEMES = [
     {
         "theme_id": "theme_6_3",
         "category": "レッドコード",
-        "title": "体のバランスを整える浮遊感 #Shorts",
+        "title": "ふらつき予防にノルウェー発の運動 #Shorts",
         "variations": [
             {
                 "pattern_id": "PATTERN_BENEFIT",
                 "hook_type": "BENEFIT",
                 "structure_type": "BENEFIT → METHOD → CTA",
-                "angle": "心地よい浮遊感の中で余分な緊張を抜く脱力運動",
-                "narration_template": "ロープに体を預ける心地よい浮遊感。余分な力を抜きながら、バランスの良い姿勢を取り戻します。{cta}",
+                "angle": "足腰の衰えや転倒の不安を解消する基本のロープ運動",
+                "narration_template": "足腰の衰えや転倒が不安な方へ。天井から吊るされた頑丈なロープを両手で掴むため、ふらつかず安心して動けます。{cta}",
                 "bg_query": "stretching ropes relaxation exercise",
                 "bg_queries": [
                     "stretching ropes relaxation exercise",
@@ -840,8 +840,8 @@ THEMES = [
                 "pattern_id": "PATTERN_QUESTION",
                 "hook_type": "QUESTION",
                 "structure_type": "QUESTION → REASON → CTA",
-                "angle": "無意識に力が入る緊張体質とリラックス促通",
-                "narration_template": "いつも体に力が入って疲れていませんか？ロープに体重を預けてリラックスし、しなやかな体の動きを促します。{cta}",
+                "angle": "体が硬く運動が苦手でも自分の力に合わせられる健康法",
+                "narration_template": "体が硬い、運動が苦手と諦めていませんか？レッドコードなら、ご自身の体力に合わせた無理のない運動が可能です。{cta}",
                 "bg_query": "sling exercise relaxation physiotherapy",
                 "bg_queries": [
                     "sling exercise relaxation physiotherapy",
@@ -853,8 +853,8 @@ THEMES = [
                 "pattern_id": "PATTERN_SURPRISE",
                 "hook_type": "SURPRISE",
                 "structure_type": "HOOK → EXPLANATION → CTA",
-                "angle": "宙に浮くような感覚で重心バランスを自然にリセット",
-                "narration_template": "宙に浮くような心地よさの中で行う運動。筋肉のこわばりをゆるめ、自然な重心バランスを整えます。{cta}",
+                "angle": "赤いロープに身を預ける心地よさと体幹安定リセット",
+                "narration_template": "赤いロープに体を預ける心地よさ。余分な力を抜きながら、ぶれない安定した立ち姿勢を自然に取り戻します。{cta}",
                 "bg_query": "suspension therapy physical therapy clinic",
                 "bg_queries": [
                     "suspension therapy physical therapy clinic",
@@ -871,14 +871,14 @@ THEMES = [
     {
         "theme_id": "theme_7_1",
         "category": "小規模多機能",
-        "title": "通い・泊まり・訪問をひとつに #Shorts",
+        "title": "通い泊まり訪問をひとつの窓口で #Shorts",
         "variations": [
             {
                 "pattern_id": "PATTERN_SURPRISE",
                 "hook_type": "SURPRISE",
                 "structure_type": "HOOK → EXPLANATION → CTA",
-                "angle": "通い・泊まり・訪問が同じスタッフで完結する安心",
-                "narration_template": "通いも、泊まりも、訪問も。いつも同じ顔なじみのスタッフが支える安心をお届けします。{cta}",
+                "angle": "通い・泊まり・訪問を顔なじみスタッフが一体提供する安心",
+                "narration_template": "通い、泊まり、訪問の3つを同じ施設で。いつも顔なじみのスタッフが対応するから、環境が変わるストレスもありません。{cta}",
                 "bg_query": "home caregiver assisting senior smiling",
                 "bg_queries": [
                     "home caregiver assisting senior smiling",
@@ -890,8 +890,8 @@ THEMES = [
                 "pattern_id": "PATTERN_QUESTION",
                 "hook_type": "QUESTION",
                 "structure_type": "QUESTION → REASON → CTA",
-                "angle": "バラバラの介護サービスへの不安とワンストップ支援",
-                "narration_template": "介護のサービスがバラバラで不安を感じていませんか？一つの施設で柔軟に対応し、いつでも安心を支えます。{cta}",
+                "angle": "サービスごとに人が変わる認知症シニアの混乱を防ぐ",
+                "narration_template": "介護サービスごとに人が変わって混乱していませんか？小規模多機能なら、いつものスタッフが寄り添い安心を支えます。{cta}",
                 "bg_query": "nurse holding senior hands caring",
                 "bg_queries": [
                     "nurse holding senior hands caring",
@@ -900,11 +900,11 @@ THEMES = [
                 ]
             },
             {
-                "pattern_id": "PATTERN_EMPATHY",
-                "hook_type": "EMPATHY",
-                "structure_type": "PROBLEM → SOLUTION → CTA",
-                "angle": "状態変化に合わせて柔軟に組み合わせるシームレスケア",
-                "narration_template": "顔なじみのスタッフが暮らしのそばに。状況の変化に合わせて必要なサポートを柔軟に組み合わせます。{cta}",
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "基本料金が月額定額制で費用が見通しやすい安心の仕組み",
+                "narration_template": "基本料金は月額定額制。利用回数が増えても介護費用の見通しが立ちやすく、ケアマネジャーとも常に連携できます。{cta}",
                 "bg_query": "caregiver visiting senior home",
                 "bg_queries": [
                     "caregiver visiting senior home",
@@ -917,14 +917,14 @@ THEMES = [
     {
         "theme_id": "theme_7_2",
         "category": "小規模多機能",
-        "title": "住み慣れた自宅で暮らし続ける #Shorts",
+        "title": "急な宿泊にも柔軟に応える在宅介護 #Shorts",
         "variations": [
             {
-                "pattern_id": "PATTERN_BENEFIT",
-                "hook_type": "BENEFIT",
-                "structure_type": "BENEFIT → METHOD → CTA",
-                "angle": "住み慣れた家で暮らしたい想いに寄り添う柔軟サポート",
-                "narration_template": "住み慣れた家でずっと暮らしたい。その想いに寄り添い、状態に合わせて柔軟にサポートします。{cta}",
+                "pattern_id": "PATTERN_SCENE",
+                "hook_type": "SCENE",
+                "structure_type": "SCENE → INSIGHT → CTA",
+                "angle": "家族の急な用事や体調変化に合わせて柔軟にサービス切替",
+                "narration_template": "急な仕事や家族の体調不良でも大丈夫。通いの日でも訪問や泊まりへ柔軟に切り替え、在宅介護の負担を大きく減らします。{cta}",
                 "bg_query": "elderly couple happy at home",
                 "bg_queries": [
                     "elderly couple happy at home",
@@ -936,8 +936,8 @@ THEMES = [
                 "pattern_id": "PATTERN_QUESTION",
                 "hook_type": "QUESTION",
                 "structure_type": "QUESTION → REASON → CTA",
-                "angle": "体調変化があっても在宅生活を継続できる仕組み",
-                "narration_template": "体調が変わっても自宅で暮らし続けたいですか？通いも泊まりも組み合わせて、安心の在宅生活を支えます。{cta}",
+                "angle": "在宅介護の限界を感じた時に頼れる臨機応変なサポート",
+                "narration_template": "在宅介護に限界を感じていませんか？「少し様子を見てほしい」「急に泊まりたい」という突発的なご要望にもすぐ対応します。{cta}",
                 "bg_query": "senior sitting living room tea peaceful",
                 "bg_queries": [
                     "senior sitting living room tea peaceful",
@@ -946,11 +946,11 @@ THEMES = [
                 ]
             },
             {
-                "pattern_id": "PATTERN_EMPATHY",
-                "hook_type": "EMPATHY",
-                "structure_type": "PROBLEM → SOLUTION → CTA",
-                "angle": "ご本人とご家族の想いを大切にする地域包括ケア",
-                "narration_template": "ご本人とご家族の想いを大切に。住み慣れた地域で安心して暮らし続けられる環境を整えます。{cta}",
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "住み慣れた自宅でずっと暮らし続けられる継続支援体制",
+                "narration_template": "住み慣れた自宅でずっと暮らしたい。ご本人の希望とご家族の生活を、24時間365日柔軟なサポートで支え続けます。{cta}",
                 "bg_query": "senior woman smiling comfortable home",
                 "bg_queries": [
                     "senior woman smiling comfortable home",
@@ -963,14 +963,14 @@ THEMES = [
     {
         "theme_id": "theme_7_3",
         "category": "小規模多機能",
-        "title": "環境を変えずに支える介護 #Shorts",
+        "title": "クリニック母体だから医療処置も安心 #Shorts",
         "variations": [
             {
                 "pattern_id": "PATTERN_SURPRISE",
                 "hook_type": "SURPRISE",
                 "structure_type": "HOOK → EXPLANATION → CTA",
-                "angle": "環境変化への不安を顔なじみスタッフの存在で解消",
-                "narration_template": "環境が変わると不安になりやすい介護。いつも同じスタッフがそばにいることで安心できる居場所をつくります。{cta}",
+                "angle": "クリニック直結だから医療処置が必要な方も在宅生活継続",
+                "narration_template": "医療機関が運営母体だから安心。インスリンや胃ろうなどの医療処置が必要な方でも、住み慣れた自宅での生活を継続できます。{cta}",
                 "bg_query": "nurse caring for elderly comforting",
                 "bg_queries": [
                     "nurse caring for elderly comforting",
@@ -982,8 +982,8 @@ THEMES = [
                 "pattern_id": "PATTERN_COMMON_MISTAKE",
                 "hook_type": "COMMON_MISTAKE",
                 "structure_type": "COMMON_MISTAKE → CORRECTION → CTA",
-                "angle": "場所や人が変わるストレスから認知症シニアを守る",
-                "narration_template": "場所や人が変わると戸惑ってしまいませんか？見慣れたスタッフが寄り添い、心安らぐ居場所を守ります。{cta}",
+                "angle": "日頃の体調変化の早期発見と母体クリニックへの迅速連携",
+                "narration_template": "体調が急に変わったらと不安ではありませんか？日頃のわずかな変化を察知し、母体クリニックへ迅速に連携・受診できます。{cta}",
                 "bg_query": "elderly person with nurse laughing",
                 "bg_queries": [
                     "elderly person with nurse laughing",
@@ -992,11 +992,11 @@ THEMES = [
                 ]
             },
             {
-                "pattern_id": "PATTERN_EMPATHY",
-                "hook_type": "EMPATHY",
-                "structure_type": "PROBLEM → SOLUTION → CTA",
-                "angle": "環境変化に敏感な方への寄り添い見守りケア",
-                "narration_template": "環境の変化に敏感な方にも安心を。いつものスタッフが優しく見守り、穏やかな毎日をサポートします。{cta}",
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "退院直後から通い泊まり訪問を組み合わせて多職種で連携",
+                "narration_template": "病院の退院直後からスムーズに在宅へ。医師や看護師、ケアマネジャーが一体となり、チームで安心の生活を支えます。{cta}",
                 "bg_query": "senior care home comfortable environment",
                 "bg_queries": [
                     "senior care home comfortable environment",
@@ -1006,7 +1006,171 @@ THEMES = [
             }
         ]
     }
+,
+    # =========================================================================
+    # カテゴリー8: 外来診療 (全3本)
+    # =========================================================================
+    {
+        "theme_id": "theme_8_1",
+        "category": "外来診療",
+        "title": "何科に行くか迷ったらまず当院へ #Shorts",
+        "variations": [
+            {
+                "pattern_id": "PATTERN_SURPRISE",
+                "hook_type": "SURPRISE",
+                "structure_type": "HOOK → EXPLANATION → CTA",
+                "angle": "専門内科に絞らないからこそ身体のことを何でも相談できる",
+                "narration_template": "何科に行けばいいか迷っていませんか？特定の専門に絞らないからこそ、身体のお悩みを何でも相談できる場所があります。{cta}",
+                "bg_query": "doctor consulting patient clinic",
+                "bg_queries": [
+                    "doctor consulting patient clinic",
+                    "friendly doctor talking with senior patient",
+                    "healthcare clinic reception consultation"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_QUESTION",
+                "hook_type": "QUESTION",
+                "structure_type": "QUESTION → REASON → CTA",
+                "angle": "病院に行くべきか迷う初期症状も気軽に相談できる窓口",
+                "narration_template": "「こんなことで病院に行っていいのかな」と悩んでいませんか？些細な体調不良も、地域のホームドクターへまずご相談ください。{cta}",
+                "bg_query": "friendly doctor talking with senior patient",
+                "bg_queries": [
+                    "friendly doctor talking with senior patient",
+                    "caring doctor listening elderly patient",
+                    "clinic medical consultation senior"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "まず受け止め必要な専門医療機関や高次病院へ適切につなぐ",
+                "narration_template": "まずは気軽に相談できる場所へ。当院で幅広く診療しながら、より専門的な治療が必要な際も高次病院へ適切におつなぎします。{cta}",
+                "bg_query": "healthcare clinic reception consultation",
+                "bg_queries": [
+                    "healthcare clinic reception consultation",
+                    "patient talking with healthcare professional",
+                    "modern hospital clinic reception"
+                ]
+            }
+        ]
+    },
+    {
+        "theme_id": "theme_8_2",
+        "category": "外来診療",
+        "title": "負担の少ないエコーや各種迅速検査 #Shorts",
+        "variations": [
+            {
+                "pattern_id": "PATTERN_SCENE",
+                "hook_type": "SCENE",
+                "structure_type": "SCENE → INSIGHT → CTA",
+                "angle": "身体に優しいエコー検査で心臓や血管など各部位を詳しく確認",
+                "narration_template": "身体への負担が少ないエコー検査。心臓や血管、腹部など、気になる症状に合わせて苦痛なく詳しい状態を確認できます。{cta}",
+                "bg_query": "ultrasound medical examination clinic",
+                "bg_queries": [
+                    "ultrasound medical examination clinic",
+                    "medical ultrasound scan examination",
+                    "doctor performing diagnostic test"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_QUESTION",
+                "hook_type": "QUESTION",
+                "structure_type": "QUESTION → REASON → CTA",
+                "angle": "血糖値や血圧が心配な方のための当日結果と早期生活習慣病対策",
+                "narration_template": "血糖値や血圧の数値が気になっていませんか？当日に結果がわかる血液検査や各種健診で、病気の早期発見をサポートします。{cta}",
+                "bg_query": "medical checkup health consultation doctor",
+                "bg_queries": [
+                    "medical checkup health consultation doctor",
+                    "blood pressure test senior clinic",
+                    "health checkup lifestyle disease clinic"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "病気になってから治すのではなく健診や予防接種で健康を守る",
+                "narration_template": "病気になってから治すのではなく、未然に防ぐ。特定健診や各種予防接種で、地域の皆さまの長く元気な暮らしを守ります。{cta}",
+                "bg_query": "senior patient health examination",
+                "bg_queries": [
+                    "senior patient health examination",
+                    "preventive medicine checkup senior",
+                    "healthy elderly patient medical checkup"
+                ]
+            }
+        ]
+    },
+    {
+        "theme_id": "theme_8_3",
+        "category": "外来診療",
+        "title": "専門医連携と介護まで支える医療 #Shorts",
+        "variations": [
+            {
+                "pattern_id": "PATTERN_SURPRISE",
+                "hook_type": "SURPRISE",
+                "structure_type": "HOOK → EXPLANATION → CTA",
+                "angle": "金曜専門医による関節ハイドロリリースなど専門治療に対応",
+                "narration_template": "長引く関節の痛みにお悩みの方へ。大学病院の専門医による関節のハイドロリリースなど、専門的な治療にも対応しています。{cta}",
+                "bg_query": "doctor and specialist healthcare team",
+                "bg_queries": [
+                    "doctor and specialist healthcare team",
+                    "orthopedic doctor consultation clinic",
+                    "joint pain medical consultation specialist"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_BENEFIT",
+                "hook_type": "BENEFIT",
+                "structure_type": "BENEFIT → METHOD → CTA",
+                "angle": "医療だけでなくリハビリから介護サービスまで法人全体で支援",
+                "narration_template": "医療だけでなく介護までトータルサポート。外来リハビリや通所サービスと連携し、退院後の生活や在宅生活を支えます。{cta}",
+                "bg_query": "physical therapy and healthcare clinic consultation",
+                "bg_queries": [
+                    "physical therapy and healthcare clinic consultation",
+                    "comprehensive healthcare and nursing care clinic",
+                    "rehabilitation team clinic consultation"
+                ]
+            },
+            {
+                "pattern_id": "PATTERN_COMMON_MISTAKE",
+                "hook_type": "COMMON_MISTAKE",
+                "structure_type": "COMMON_MISTAKE → CORRECTION → CTA",
+                "angle": "土曜の専門外来と地域高次病院との連携による安心の医療体制",
+                "narration_template": "土曜日の専門外来や地域病院との連携体制。普段の診察から高度な専門医療まで、安心のネットワークでお応えします。{cta}",
+                "bg_query": "caring doctor patient rehabilitation",
+                "bg_queries": [
+                    "caring doctor patient rehabilitation",
+                    "medical network doctor referral clinic",
+                    "trusted local healthcare doctor"
+                ]
+            }
+        ]
+    }
 ]
+
+# カテゴリー巡回（Round-Robin）順への自動再編成
+# 同じカテゴリーを連続させず、1つずつカテゴリーをローテーションさせる
+def _interleave_themes_by_category(themes_list):
+    categories = []
+    by_cat = {}
+    for t in themes_list:
+        c = t.get('category', '')
+        if c not in by_cat:
+            categories.append(c)
+            by_cat[c] = []
+        by_cat[c].append(t)
+    
+    interleaved = []
+    max_len = max(len(v) for v in by_cat.values()) if by_cat else 0
+    for i in range(max_len):
+        for c in categories:
+            if i < len(by_cat[c]):
+                interleaved.append(by_cat[c][i])
+    return interleaved
+
+THEMES = _interleave_themes_by_category(THEMES)
 
 # デフォルト設定の補完
 for _t in THEMES:
@@ -1091,10 +1255,30 @@ def select_next_theme(state_file=STATE_FILE_PATH):
     try:
         with open(state_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            last_index = data.get('last_theme_index', data.get('last_index', -1))
+            last_theme_id = data.get('last_theme_id')
+            last_category = data.get('category')
+            last_index = -1
+            if last_theme_id:
+                for idx, t in enumerate(THEMES):
+                    if t.get('theme_id') == last_theme_id:
+                        last_index = idx
+                        break
+            if last_index == -1:
+                last_index = data.get('last_theme_index', data.get('last_index', -1))
+
             next_index = (last_index + 1) % len(THEMES)
             selected = THEMES[next_index]
-            print(f"[PRODUCTION MODE] Theme rotation: index {next_index}/{len(THEMES)-1} ({selected['theme_id']})")
+
+            # 安全ガード: 同じカテゴリーが2回以上連続して投稿されることを確実に防止
+            if len(THEMES) > 1 and last_category and selected.get('category') == last_category:
+                for offset in range(1, len(THEMES)):
+                    candidate_idx = (next_index + offset) % len(THEMES)
+                    if THEMES[candidate_idx].get('category') != last_category:
+                        next_index = candidate_idx
+                        selected = THEMES[next_index]
+                        break
+
+            print(f"[PRODUCTION MODE] Theme rotation: index {next_index}/{len(THEMES)-1} ({selected['theme_id']} - {selected['category']})")
             return apply_variation_to_theme(selected)
     except Exception as e:
         print(f"[THEME ERROR] Failed to read theme state: {e}. Falling back to default theme.")
