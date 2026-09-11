@@ -1,4 +1,5 @@
-﻿import os
+import re
+import os
 import sys
 import google.auth.transport.requests
 from google.oauth2.credentials import Credentials
@@ -10,12 +11,12 @@ from googleapiclient.errors import HttpError
 # アップロード公開設定スイッチ
 # ==============================================================================
 # ENABLE_SCHEDULED_PUBLISH:
-#   False: 事前チェック用「限定公開（unlisted）」モード（予約公開 publishAt を無効化）
+#   False: 本番「一般公開（public）」モード（予約公開 publishAt を無効化して即時一般公開）
 #   True : 本番運用用「24時間後予約公開（publishAt + private）」モード
 ENABLE_SCHEDULED_PUBLISH = False
 
 # デフォルトのプライバシーステータス（ENABLE_SCHEDULED_PUBLISH = False 時に適用）
-DEFAULT_PRIVACY_STATUS = 'unlisted'
+DEFAULT_PRIVACY_STATUS = 'public'
 # ==============================================================================
 
 CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
@@ -70,6 +71,19 @@ def upload_video(youtube, file_path, publish_at=None, title=VIDEO_TITLE, descrip
         title = f"{title} #Shorts"
     if '#Shorts' not in description and '#shorts' not in description:
         description = f"{description}\n\n#Shorts"
+
+    # 指定ハッシュタグ（自動予約投稿されるYouTube動画の説明文末尾に追加、重複防止・順序厳守）
+    REQUIRED_HASHTAGS = [
+        "#八幡西区", "#木屋瀬", "#北九州", "#リハビリ", "#痛み",
+        "#腰痛", "#膝痛", "#肩痛", "#関節痛", "#通所リハビリ",
+        "#デイケア", "#通所介護", "#小規模多機能", "#介護",
+        "#介護施設", "#地域医療", "#求人", "#介護求人",
+        "#医療求人", "#北九州求人", "#木屋瀬求人", "#Shorts"
+    ]
+    existing_tags = set(re.findall(r'#[^\s#]+', description))
+    tags_to_add = [tag for tag in REQUIRED_HASHTAGS if tag not in existing_tags]
+    if tags_to_add:
+        description = f"{description.rstrip()}\n\n{' '.join(tags_to_add)}"
 
     body = {
         'snippet': {
@@ -131,7 +145,7 @@ def main():
     else:
         target_publish_at = None
         target_privacy_status = PRIVACY_STATUS if PRIVACY_STATUS else DEFAULT_PRIVACY_STATUS
-        print(f"[MODE] Unlisted Evaluation Mode ACTIVE (publishAt disabled, privacyStatus: {target_privacy_status})")
+        print(f"[MODE] Public Instant Upload Mode ACTIVE (publishAt disabled, privacyStatus: {target_privacy_status})")
 
     upload_video(
         youtube=youtube,

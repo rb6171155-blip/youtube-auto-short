@@ -64,15 +64,15 @@ jobs:
         run: |
           python generate_shorts_pipeline.py
 
-      - name: Upload Shorts to YouTube as Unlisted
+      - name: Upload Shorts to YouTube as Public
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          YOUTUBE_PRIVACY_STATUS: unlisted
+          YOUTUBE_PRIVACY_STATUS: public
           VIDEO_PATH: test_output/shorts_final.mp4
         run: |
-          echo "Uploading as Unlisted (限定公開)..."
+          echo "Uploading as Public (一般公開)..."
           if [ -f test_output/current_theme.json ]; then
             export YOUTUBE_VIDEO_TITLE=$(python -c "import json; print(json.load(open('test_output/current_theme.json'))['title'])")
             export YOUTUBE_VIDEO_DESCRIPTION=$(python -c "import json; t=json.load(open('test_output/current_theme.json')); print(f\"{t['title']}\n\n{t['narration']}\n\n#西田医院 #リハビリ #介護 #医療 #Shorts\")")
@@ -93,7 +93,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No theme state changes to commit."
           else
-            git commit -m "Update theme state after successful unlisted post [skip ci]"
+            git commit -m "Update theme state after successful public post [skip ci]"
             git push origin main
           fi
 
