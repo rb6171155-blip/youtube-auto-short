@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "YouTube Auto Short TTS 発音・文脈管理辞書",
+  "entries": [
+    {
+      "id": "nanika_clinic_context",
+      "surface": "何科",
+      "reading": "なにか",
+      "speech_text": "なに科",
+      "accent_type": "heiban",
+      "context": "医療・診療科の選択・受診（受診・相談等の文脈）",
+      "match_pattern": "何科(?=(?:[にをへ]?(?:行け|行く|受診|かか|相談|迷っ|選ぶ)|[にをへ]))",
+      "replacement": "なに科",
+      "priority": 100,
+      "notes": "「なんか」への誤読を防止し、診療科のイントネーションを維持するためTTSには「なに科」を渡す（助詞に・を・へおよび受診・相談等に対応）"
+    },
+    {
+      "id": "nanika_medical_general",
+      "surface": "何科",
+      "reading": "なにか",
+      "speech_text": "なに科",
+      "accent_type": "heiban",
+      "context": "病院・診療所等の医療施設文脈における何科",
+      "match_pattern": "((?:病院|医院|クリニック|診察|受診)[^。！？!?]*?)何科",
+      "replacement": "\\g<1>なに科",
+      "priority": 95,
+      "notes": "医療施設関連の文脈で診療科を指す何科"
+    },
+    {
+      "id": "katahe_context",
+      "surface": "方へ",
+      "reading": "かたへ",
+      "speech_text": "かたへ",
+      "accent_type": "odaka",
+      "context": "呼びかけ・CTA導入部（動詞連体形/形容詞 + 方へ）",
+      "match_pattern": "([たいるい]|お悩み|お悩みの|不安な|お困り|お困りの)方へ",
+      "replacement": "\\g<1>かたへ",
+      "priority": 90,
+      "notes": "「ほうへ」の誤読を防止し、「かたへ」として自然に発音（動詞連体形、お悩みの方へ、不安な方へ等に対応）"
+    },
+    {
+      "id": "irou_medical",
+      "surface": "胃ろう",
+      "reading": "いろう",
+      "speech_text": "胃ろう",
+      "accent_type": "heiban",
+      "context": "医療処置・栄養管理（胃瘻）",
+      "match_pattern": "胃ろう",
+      "replacement": "胃ろう",
+      "priority": 80,
+      "notes": "医療処置としての胃瘻"
+    },
+    {
+      "id": "toshu_rehab",
+      "surface": "徒手",
+      "reading": "としゅ",
+      "speech_text": "としゅ",
+      "accent_type": "atamadaka",
+      "context": "徒手療法・リハビリ手技",
+      "match_pattern": "徒手(?=アプローチ|療法|検査)",
+      "replacement": "としゅ",
+      "priority": 80,
+      "notes": "手技療法の専門用語。DOSと誤認されないよう平仮名で補正"
+    },
+    {
+      "id": "kassousei_muscle",
+      "surface": "滑走性",
+      "reading": "かっそうせい",
+      "speech_text": "滑走性",
+      "accent_type": "heiban",
+      "context": "筋肉・組織の滑り",
+      "match_pattern": "滑走性",
+      "replacement": "滑走性",
+      "priority": 80,
+      "notes": "組織間の滑りに関する専門用語"
+    },
+    {
+      "id": "hydrorelease_medical",
+      "surface": "ハイドロリリース",
+      "reading": "はいどろりりーす",
+      "speech_text": "ハイドロリリース",
+      "accent_type": "nakadaka",
+      "context": "専門医による筋膜リリース",
+      "match_pattern": "ハイドロリリース",
+      "replacement": "ハイドロリリース",
+      "priority": 80,
+      "notes": "専門医による関節・筋膜治療"
+    },
+    {
+      "id": "isr_therapy",
+      "surface": "アイエスアール",
+      "reading": "あいえすあーる",
+      "speech_text": "アイエスアール",
+      "accent_type": "nakadaka",
+      "context": "組織間リリース療法（ISR）",
+      "match_pattern": "ISR",
+      "replacement": "アイエスアール",
+      "priority": 80,
+      "notes": "英字ISRを確実なカタカナ読みに補正"
+    },
+    {
+      "id": "redcord_rehab",
+      "surface": "レッドコード",
+      "reading": "れっどこーど",
+      "speech_text": "レッドコード",
+      "accent_type": "nakadaka",
+      "context": "スリングリハビリ運動療法",
+      "match_pattern": "レッドコード",
+      "replacement": "レッドコード",
+      "priority": 80,
+      "notes": "ノルウェー発のリハビリ器具"
+    },
+    {
+      "id": "rigaku_ryohoshi",
+      "surface": "理学療法士",
+      "reading": "りがくりょうほうし",
+      "speech_text": "理学療法士",
+      "accent_type": "nakadaka",
+      "context": "リハビリ国家資格職種",
+      "match_pattern": "理学療法士",
+      "replacement": "理学療法士",
+      "priority": 80,
+      "notes": "リハビリ専門職"
+    },
+    {
+      "id": "care_manager",
+      "surface": "ケアマネジャー",
+      "reading": "けあまねじゃー",
+      "speech_text": "ケアマネジャー",
+      "accent_type": "nakadaka",
+      "context": "介護支援専門員",
+      "match_pattern": "ケアマネジャー",
+      "replacement": "ケアマネジャー",
+      "priority": 80,
+      "notes": "介護連携専門職"
+    },
+    {
+      "id": "shoukibo_takunou",
+      "surface": "小規模多機能",
+      "reading": "しょうきぼたきのう",
+      "speech_text": "小規模多機能",
+      "accent_type": "nakadaka",
+      "context": "介護サービス種別",
+      "match_pattern": "小規模多機能",
+      "replacement": "小規模多機能",
+      "priority": 80,
+      "notes": "通い・泊まり・訪問の一体型施設"
+    },
+    {
+      "id": "kouji_hospital",
+      "surface": "高次病院",
+      "reading": "こうじびょういん",
+      "speech_text": "高次病院",
+      "accent_type": "nakadaka",
+      "context": "高度医療機関",
+      "match_pattern": "高次病院",
+      "replacement": "こうじ病院",
+      "priority": 80,
+      "notes": "「こうじびょういん」として誤読（工事など）を防ぎ確実に発音"
+    },
+    {
+      "id": "tokutei_kenshin",
+      "surface": "特定健診",
+      "reading": "とくていけんしん",
+      "speech_text": "特定健診",
+      "accent_type": "nakadaka",
+      "context": "特定健康診査",
+      "match_pattern": "特定健診",
+      "replacement": "特定健診",
+      "priority": 80,
+      "notes": "定期健康診断"
+    },
+    {
+      "id": "kadouiki_joint",
+      "surface": "可動域",
+      "reading": "かどういき",
+      "speech_text": "可動域",
+      "accent_type": "nakadaka",
+      "context": "関節の動く範囲",
+      "match_pattern": "可動域",
+      "replacement": "可動域",
+      "priority": 80,
+      "notes": "リハビリ可動域"
+    },
+    {
+      "id": "nishida_iin",
+      "surface": "西田医院",
+      "reading": "にしだいいん",
+      "speech_text": "西田医院",
+      "accent_type": "nakadaka",
+      "context": "医療機関ブランド名",
+      "match_pattern": "西田医院",
+      "replacement": "西田医院",
+      "priority": 80,
+      "notes": "当院名称"
+    }
+  ],
+  "prosody_rules": [
+    {
+      "id": "clinic_name_breath",
+      "pattern": "(西田医院では)(?!、)",
+      "replacement": "\\1、",
+      "notes": "施設名の提示後に自然なブレス"
+    },
+    {
+      "id": "hook_intro_breath",
+      "pattern": "(姿勢を)(?!、)",
+      "replacement": "\\1、",
+      "notes": "導入部の重要名詞句後にブレス"
+    },
+    {
+      "id": "method_clause_breath",
+      "pattern": "([をに]利用した)(?!、)",
+      "replacement": "\\1、",
+      "notes": "手段・方法節の区切り"
+    },
+    {
+      "id": "purpose_clause_breath",
+      "pattern": "([るい]よう)(?!、)",
+      "replacement": "\\1、",
+      "notes": "目的節の区切り"
+    },
+    {
+      "id": "reason_clause_breath",
+      "pattern": "([るいた]ため)(?!、)",
+      "replacement": "\\1、",
+      "notes": "理由・目的節の区切り"
+    },
+    {
+      "id": "adverb_question_breath",
+      "pattern": "(実は[^、。!?！？]+?に)(?!、)",
+      "replacement": "\\1、",
+      "notes": "問いかけ・逆接の区切り"
+    },
+    {
+      "id": "cta_intro_breath",
+      "pattern": "(詳しくは|取り組みは|詳細は)(?!、)",
+      "replacement": "\\1、",
+      "notes": "CTA導入部のブレス"
+    }
+  ]
+}
