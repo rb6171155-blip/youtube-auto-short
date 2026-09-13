@@ -1226,6 +1226,26 @@ def apply_variation_to_theme(theme, pattern_index=None, cta_index=None):
     t_copy['structure_type'] = v.get('structure_type', 'HOOK → EXPLANATION → CTA')
     t_copy['angle'] = v.get('angle', '')
     t_copy['cta'] = cta
+
+    # タイトルのバリエーション個別化（既存のtitleとangle情報のみを利用）
+    if 'title' in v:
+        t_copy['title'] = v['title']
+    else:
+        orig_title = theme.get('title', '')
+        base_title = orig_title.replace('#Shorts', '').strip()
+        angle = v.get('angle', '').strip()
+        sub = angle
+        for suffix in ['という視点', 'の視点', 'という気づき', 'の気づき', 'という誤解の解消', 'の誤解の解消',
+                       'へのアプローチ', 'の維持', 'のステップ', 'の答え', 'の解消', 'という安心', 'という仕組み', 'という事実と専門手技']:
+            if sub.endswith(suffix):
+                sub = sub[:-len(suffix)].strip()
+                break
+        if sub:
+            custom_title = f"{base_title}｜{sub} #Shorts"
+            t_copy['title'] = custom_title
+        else:
+            t_copy['title'] = orig_title
+
     return t_copy
 
 def get_theme_by_id(theme_id, pattern_index=None, cta_index=None):
@@ -1238,7 +1258,7 @@ def get_all_themes():
     return [apply_variation_to_theme(t) for t in THEMES]
 
 # ==============================================================================
-# 本番運用用：日次順次ローテーション選択
+# 本番運用用：72シナリオ確定順次ローテーション選択エンジン (3本/日・24日1巡)
 # ==============================================================================
 def select_next_theme(state_file=STATE_FILE_PATH):
     env_theme_id = os.environ.get('THEME_ID', '').strip()
@@ -1246,60 +1266,71 @@ def select_next_theme(state_file=STATE_FILE_PATH):
         for t in THEMES:
             if t['theme_id'] == env_theme_id:
                 print(f"[THEME] Selected theme from environment THEME_ID: {env_theme_id}")
-                return apply_variation_to_theme(t)
+                theme_obj = apply_variation_to_theme(t, pattern_index=0)
+                theme_obj['is_manual'] = True
+                return theme_obj
         print(f"[THEME WARNING] THEME_ID '{env_theme_id}' not found in THEMES. Falling back to rotation.")
 
+    total_themes = len(THEMES)  # 24
+    total_scenarios = total_themes * 3  # 72
+
     if not os.path.exists(state_file):
-        return apply_variation_to_theme(THEMES[0])
+        selected = THEMES[0]
+        theme_obj = apply_variation_to_theme(selected, pattern_index=0)
+        theme_obj['scenario_index'] = 0
+        theme_obj['theme_index'] = 0
+        theme_obj['variation_index'] = 0
+        return theme_obj
 
     try:
         with open(state_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            last_theme_id = data.get('last_theme_id')
-            last_category = data.get('category')
-            last_index = -1
-            if last_theme_id:
-                for idx, t in enumerate(THEMES):
-                    if t.get('theme_id') == last_theme_id:
-                        last_index = idx
-                        break
-            if last_index == -1:
-                last_index = data.get('last_theme_index', data.get('last_index', -1))
 
-            next_index = (last_index + 1) % len(THEMES)
-            selected = THEMES[next_index]
+        if 'last_scenario_index' in data:
+            last_scenario_index = data.get('last_scenario_index', -1)
+        else:
+            # 既存state（last_theme_index: 0〜23）との後方互換性
+            last_scenario_index = data.get('last_theme_index', data.get('last_index', -1))
 
-            # 安全ガード: 同じカテゴリーが2回以上連続して投稿されることを確実に防止
-            if len(THEMES) > 1 and last_category and selected.get('category') == last_category:
-                for offset in range(1, len(THEMES)):
-                    candidate_idx = (next_index + offset) % len(THEMES)
-                    if THEMES[candidate_idx].get('category') != last_category:
-                        next_index = candidate_idx
-                        selected = THEMES[next_index]
-                        break
+        next_scenario_index = (last_scenario_index + 1) % total_scenarios
+        next_theme_index = next_scenario_index % total_themes
+        next_variation_index = next_scenario_index // total_themes
 
-            print(f"[PRODUCTION MODE] Theme rotation: index {next_index}/{len(THEMES)-1} ({selected['theme_id']} - {selected['category']})")
-            return apply_variation_to_theme(selected)
+        selected = THEMES[next_theme_index]
+        theme_obj = apply_variation_to_theme(selected, pattern_index=next_variation_index)
+        theme_obj['scenario_index'] = next_scenario_index
+        theme_obj['theme_index'] = next_theme_index
+        theme_obj['variation_index'] = next_variation_index
+
+        print(f"[PRODUCTION MODE] 72-Scenario Rotation: Scenario {next_scenario_index+1}/{total_scenarios} "
+              f"(Theme {next_theme_index+1}/{total_themes} [{selected['theme_id']}], Variation {next_variation_index+1}/3)")
+        return theme_obj
     except Exception as e:
-        print(f"[THEME ERROR] Failed to read theme state: {e}. Falling back to default theme.")
-        return apply_variation_to_theme(THEMES[0])
+        print(f"[THEME ERROR] Failed to read theme state: {e}. Falling back to initial scenario.")
+        selected = THEMES[0]
+        theme_obj = apply_variation_to_theme(selected, pattern_index=0)
+        theme_obj['scenario_index'] = 0
+        theme_obj['theme_index'] = 0
+        theme_obj['variation_index'] = 0
+        return theme_obj
 
 def commit_theme_state(theme, state_file=STATE_FILE_PATH):
-    theme_id = theme.get('theme_id')
-    theme_index = -1
-    for i, t in enumerate(THEMES):
-        if t['theme_id'] == theme_id:
-            theme_index = i
-            break
+    # 手動指定時（THEME_ID）は自動ローテーションの進行ポインタを保護するためスキップ
+    if theme.get('is_manual', False) or 'scenario_index' not in theme:
+        print(f"[THEME STATE SKIP] Manual execution for theme_id={theme.get('theme_id')}. Skipping rotation state commit to preserve automatic 72-scenario rotation.")
+        return True
 
-    if theme_index == -1:
-        print(f"[THEME WARNING] Cannot commit unknown theme_id: {theme_id}")
-        return False
+    scenario_index = theme.get('scenario_index', 0)
+    theme_index = theme.get('theme_index', scenario_index % len(THEMES))
+    variation_index = theme.get('variation_index', scenario_index // len(THEMES))
+    theme_id = theme.get('theme_id')
 
     os.makedirs(os.path.dirname(state_file), exist_ok=True)
     state_data = {
+        'last_scenario_index': scenario_index,
         'last_theme_index': theme_index,
         'last_index': theme_index,
+        'variation_index': variation_index,
         'last_theme_id': theme_id,
         'category': theme.get('category', ''),
         'title': theme.get('title', ''),
@@ -1311,7 +1342,7 @@ def commit_theme_state(theme, state_file=STATE_FILE_PATH):
     try:
         with open(state_file, 'w', encoding='utf-8') as f:
             json.dump(state_data, f, ensure_ascii=False, indent=2)
-        print(f"[THEME STATE COMMITTED] Successfully updated state to theme_index={theme_index} ({theme_id})")
+        print(f"[THEME STATE COMMITTED] Successfully updated state to scenario_index={scenario_index} (theme_index={theme_index}, variation={variation_index}, {theme_id})")
         return True
     except Exception as e:
         print(f"[THEME ERROR] Failed to write theme state: {e}")
