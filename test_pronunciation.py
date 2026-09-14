@@ -148,6 +148,141 @@ class TestPronunciationSeparation(unittest.TestCase):
         self.assertEqual(d["start"], 0.0)
         self.assertEqual(d["end"], 3.5)
 
+    def test_06_omodarusa_reading_and_subtitle_separation(self):
+        """
+        Test 6: 「重だるさ」「重だるい」の誤読防止・字幕維持検証
+        - subtitle_text は漢字の「重だるさ」「重だるい」を100%維持
+        - spoken_text（TTS用）は「おもだるさ」「おもだるい」となり「じゅうだるさ」にならない
+        """
+        original = "揉んでもすぐに戻る重だるさ。"
+        spoken = get_spoken_text(original)
+
+        # 1. 字幕原稿（original）が変化していないことの検証
+        self.assertEqual(original, "揉んでもすぐに戻る重だるさ。")
+
+        # 2. TTS用テキスト（spoken）において「重だるさ」が「おもだるさ」へ変換されていること
+        self.assertIn("おもだるさ", spoken)
+        self.assertNotIn("重だるさ", spoken)
+
+        # 3. 「じゅうだるさ」に誤読されていないこと
+        self.assertNotIn("じゅうだるさ", spoken)
+
+        # 4. 「重だるい」の検証
+        sample_i = "重だるい感じが抜けません。"
+        spoken_i = get_spoken_text(sample_i)
+        self.assertIn("おもだるい", spoken_i)
+        self.assertNotIn("重だるい", spoken_i)
+        self.assertNotIn("じゅうだるい", spoken_i)
+
+    def test_07_prohibited_misreadings_blacklist(self):
+        """
+        Test 7: 禁止誤読ブラックリストの検出排除
+        - 「じゅうだるさ」「じゅうだるい」「なんかに行けば」等の禁止表現が
+          いかなる入力からも生成されないことを検証
+        """
+        prohibited_cases = [
+            ("揉んでもすぐに戻る重だるさ。", "じゅうだるさ"),
+            ("重だるい筋肉の違和感。", "じゅうだるい"),
+            ("何科に行けばいいか迷っていませんか？", "なんかに行けば")
+        ]
+        for src, forbidden in prohibited_cases:
+            spoken = get_spoken_text(src)
+            self.assertNotIn(forbidden, spoken, f"Prohibited misreading '{forbidden}' found in spoken text for '{src}'")
+
+    def test_08_all_72_scenarios_comprehensive_audit(self):
+        """
+        Test 8: 全72シナリオに対する重要語・禁止誤読網羅検査
+        - 全72シナリオのナレーション原稿を走査
+        - 禁止誤読（じゅうだるさ、じゅうだるい、なんかに行けば）が全シナリオでゼロ件であること
+        - 「重だるさ」を含むシナリオで「おもだるさ」へ正しく変換されていること
+        - 「何科」を含むシナリオで「なに科」へ正しく変換されていること
+        - 「体重」などの正規の音読み漢字が誤置換（例: おも）されていないこと
+        """
+        cta_sample = "西田医院の取り組みはプロフィールから。"
+        forbidden_patterns = ["じゅうだるさ", "じゅうだるい", "なんかに行けば"]
+        tested_scenarios = 0
+
+        for t in THEMES:
+            theme_id = t.get("theme_id")
+            for idx, v in enumerate(t.get("variations", [])):
+                tested_scenarios += 1
+                template = v.get("narration_template", "")
+                narration = template.format(cta=cta_sample)
+                spoken = get_spoken_text(narration)
+
+                # 1. 禁止誤読ワードの不在アサーション
+                for fp in forbidden_patterns:
+                    self.assertNotIn(
+                        fp, spoken,
+                        f"Prohibited pattern '{fp}' found in {theme_id} variation {idx+1}: {spoken}"
+                    )
+
+                # 2. 「重だるさ」個別チェック（theme_5_2 等）
+                if "重だるさ" in narration:
+                    self.assertIn(
+                        "おもだるさ", spoken,
+                        f"'重だるさ' was not converted to 'おもだるさ' in {theme_id} v{idx+1}"
+                    )
+                    self.assertNotIn(
+                        "重だるさ", spoken,
+                        f"Raw kanji '重だるさ' remained in spoken text in {theme_id} v{idx+1}"
+                    )
+
+                # 3. 「何科」個別チェック（theme_8_1 等）
+                if "何科" in narration and ("行けば" in narration or "行く" in narration or "受診" in narration):
+                    self.assertIn(
+                        "なに科", spoken,
+                        f"'何科' was not converted to 'なに科' in {theme_id} v{idx+1}"
+                    )
+
+                # 4. 「体重」等の通常音読みが誤変換されていないことの検証
+                if "体重" in narration:
+                    self.assertIn(
+                        "体重", spoken,
+                        f"'体重' was corrupted in {theme_id} v{idx+1}: {spoken}"
+                    )
+
+        self.assertEqual(tested_scenarios, 72, "Must audit exactly 72 scenarios")
+
+    def test_09_audio_sentence_boundary_sync_integrity(self):
+        """
+        Test 9: 実音声 SentenceBoundary による字幕同期タイムライン整合性検証
+        - Edge TTS を実際に呼び出し、SpeechSegment および dynamic_scenes が
+          字幕表示（漢字）を完全維持しつつ、実音声タイムラインと整合することを検証
+        """
+        target_text = "揉んでもすぐに戻る重だるさ。組織同士が滑り合うよう丁寧な手技で動きの根本を整えます。"
+        out_audio = os.path.join("test_output", "test_omodarusa_sync.mp3")
+
+        ok, timeline = generate_voice_with_timeline(
+            text=target_text,
+            output_path=out_audio,
+            voice_config={"voice": "ja-JP-NanamiNeural", "rate": "+0%", "pitch": "+0Hz"}
+        )
+
+        self.assertTrue(ok, "TTS generation must succeed")
+        self.assertTrue(len(timeline) >= 2, f"Should have at least 2 segments, got {len(timeline)}")
+
+        # Segment 1 の検証
+        seg1 = timeline[0]
+        # 字幕テキストは漢字「重だるさ」を100%保持
+        self.assertIn("重だるさ", seg1["subtitle_text"])
+        self.assertIn("重だるさ", seg1["text"])
+        # 音声テキストは「おもだるさ」に補正されていること
+        self.assertIn("おもだるさ", seg1["speech_text"])
+        self.assertIn("おもだるさ", seg1["spoken_text"])
+        self.assertNotIn("じゅうだるさ", seg1["speech_text"])
+
+        # タイムラインの整合性
+        self.assertTrue(seg1["start"] >= 0.0)
+        self.assertTrue(seg1["end"] > seg1["start"])
+        self.assertTrue(seg1["duration"] > 0.0)
+
+        # dynamic_scenes 構築の検証（最初のシーンは0.0s固定）
+        scenes = build_dynamic_scenes_from_timeline(timeline, total_video_duration=15.0)
+        self.assertEqual(len(scenes), len(timeline))
+        self.assertEqual(scenes[0]["start"], 0.0)
+        self.assertIn("重だるさ", scenes[0]["raw_text"])
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

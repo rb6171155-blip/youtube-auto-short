@@ -194,6 +194,30 @@
       "replacement": "西田医院",
       "priority": 80,
       "notes": "当院名称"
+    },
+    {
+      "id": "omodarusa_symptom",
+      "surface": "重だるさ",
+      "reading": "おもだるさ",
+      "speech_text": "おもだるさ",
+      "accent_type": "nakadaka",
+      "context": "筋肉や身体の重だるい感覚・症状",
+      "match_pattern": "重だるさ",
+      "replacement": "おもだるさ",
+      "priority": 90,
+      "notes": "「じゅうだるさ」への誤読を防止し、訓読み「おもだるさ」として正確に発音"
+    },
+    {
+      "id": "omodarui_symptom",
+      "surface": "重だるい",
+      "reading": "おもだるい",
+      "speech_text": "おもだるい",
+      "accent_type": "nakadaka",
+      "context": "筋肉や身体の重だるい状態・形容詞",
+      "match_pattern": "重だるい",
+      "replacement": "おもだるい",
+      "priority": 90,
+      "notes": "「じゅうだるい」への誤読を防止し、訓読み「おもだるい」として正確に発音"
     }
   ],
   "prosody_rules": [
